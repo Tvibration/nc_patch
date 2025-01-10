@@ -242,7 +242,11 @@ public class RestForWMSimpl {
 						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
 						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //源头单据表体ID
 						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //重新查询获取源头单据表头ID
+						if(cfirstbillhid==null||cfirstbillhid.equals(""))
+							cfirstbillhid = bodys[j].getCfirstbillhid();
 						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //重新查询获取源头单据号
+						if(cgddh==null||cgddh.equals(""))
+							cgddh = bodys[j].getVfirstbillcode();
 						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();	
 						String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//货位
 //						UFDate dproducedate_d = new UFDate(dproducedate);	
@@ -917,6 +921,12 @@ public class RestForWMSimpl {
 		String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
 		String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 		String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+//		int maxno_int = 0;
+//		if(maxno.contains(".")) {
+//			UFDouble dd = new UFDouble(maxno);
+//			maxno_int = dd.intValue();
+//		}else
+//			maxno_int = Integer.valueOf(maxno);
 		for(int i=0;i<newMateriallist.size();i++) {
 			PickmItemVO pv = new PickmItemVO();
 			String pk_material = newMateriallist.getJSONObject(i).getString("pk_material")==null?"null":newMateriallist.getJSONObject(i).getString("pk_material");
