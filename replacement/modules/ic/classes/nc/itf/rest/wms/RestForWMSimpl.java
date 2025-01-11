@@ -1657,13 +1657,23 @@ public class RestForWMSimpl {
 				String cpmohid = jsonAy.getString("cpmohid");  //生产订单ID
 				String scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //生产订单类型
 				String scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //订单交易类型编码
+				
 				String cmoid = jsonAy.getString("cmoid");  //生产订单表体ID
 				String cwarehouseid = jsonAy.getString("cwarehouseid");  //仓库ID
 				String sql_group = "select p.pk_group from mm_pmo p where p.cpmohid='"+cpmohid+"'";
 				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
 				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //设置集团环境变量
 				InvocationInfoProxy.getInstance().setUserId(cuserid);    //设置用户环境变量，用户为WMS
-						
+				
+				String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//生产报告类型code
+				if(scbgCode == null) {
+					throw new Exception("没有找到流程生产订单类型：" + scddlxbm + "对应的生产报告类型关系");
+				}
+				String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//库存产成品入库类型code
+				if(ccprkCode == null) {
+					throw new Exception("没有找到生产报告类型：" + scbgCode + "对应的库存产成品入库单类型关系");
+				}
+				
 				UFDouble nbwrastnum = jsonAy.getString("nbwrastnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrastnum"));  //完工数量
 				UFDouble nbwrnum = jsonAy.getString("nbwrnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrnum"));  //完工主数量
 				String batchcode = jsonAy.getString("batchcode");  //入库批次号
@@ -1720,10 +1730,6 @@ public class RestForWMSimpl {
 				pv.getHead().setVdef1(wmsID);
 				FinProdInBodyVO pbv = pv.getBody(0);
 				
-				String ccprkCode = getTransformCode(pk_group, "46", scddlxbm);
-				if(ccprkCode == null) {
-					throw new Exception("没有找到对应的上下游单据类型关系");
-				}
 				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
 				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //当生产订单类型为返工流程生产订单时，产成品入库也设为该类型
 					pbv.setBreworkflag(UFBoolean.TRUE);
@@ -1861,6 +1867,14 @@ public class RestForWMSimpl {
 					scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+pk+"'");  //生产订单类型
 					scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+pk+"'");  //订单交易类型编码
 				}
+				String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//生产报告类型code
+				if(scbgCode == null) {
+					throw new Exception("没有找到流程生产订单类型：" + scddlxbm + "对应的生产报告类型关系");
+				}
+				String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//库存产成品入库类型code
+				if(ccprkCode == null) {
+					throw new Exception("没有找到生产报告类型：" + scbgCode + "对应的库存产成品入库单类型关系");
+				}
 				String[] pks = pks_list.toArray(new String[pks_list.size()]);
 				AbstractBill[] PV=(AbstractBill[])IQ.queryAbstractBillsByPks(PMOAggVO.class, pks);
 				for(int j=0;j<PV.length;j++) {
@@ -1918,11 +1932,6 @@ public class RestForWMSimpl {
 				pv.getHead().setVdef1(wmsID);
 //				FinProdInBodyVO pbv = pv.getBody(0);
 				UFBoolean Breworkflag = UFBoolean.FALSE;
-				
-				String ccprkCode = getTransformCode(pk_group, "46", scddlxbm);
-				if(ccprkCode == null) {
-					throw new Exception("没有找到对应的上下游单据类型关系");
-				}
 				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
 				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //当生产订单类型为返工流程生产订单时，产成品入库也设为该类型
 					Breworkflag = UFBoolean.TRUE;
@@ -2267,6 +2276,15 @@ public class RestForWMSimpl {
 				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
 				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //设置集团环境变量
 				InvocationInfoProxy.getInstance().setUserId(cuserid);    //设置用户环境变量，用户为WMS
+				
+				String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//生产报告类型code
+				if(scbgCode == null) {
+					throw new Exception("没有找到流程生产订单类型：" + scddlxbm + "对应的生产报告类型关系");
+				}
+				String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//库存产成品入库类型code
+				if(ccprkCode == null) {
+					throw new Exception("没有找到生产报告类型：" + scbgCode + "对应的库存产成品入库单类型关系");
+				}
 						
 				UFDouble nbwrastnum = jsonAy.getString("nbwrastnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrastnum"));  //完工数量
 				UFDouble nbwrnum = jsonAy.getString("nbwrnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrnum"));  //完工主数量
@@ -2338,10 +2356,6 @@ public class RestForWMSimpl {
 				pv.getHead().setVdef1(wmsID);
 				FinProdInBodyVO pbv = pv.getBody(0);
 				
-				String ccprkCode = getTransformCode(pk_group, "46", scddlxbm);
-				if(ccprkCode == null) {
-					throw new Exception("没有找到对应的上下游单据类型关系");
-				}
 				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
 				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //当生产订单类型为返工流程生产订单时，产成品入库也设为该类型
 					pbv.setBreworkflag(UFBoolean.TRUE);
