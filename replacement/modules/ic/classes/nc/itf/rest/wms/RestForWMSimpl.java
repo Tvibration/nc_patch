@@ -434,7 +434,7 @@ public class RestForWMSimpl {
 				PV.getParentVO().setVdef3("Y");
 				String vtrantypecode = getTransformCode(pk_group, "4D", srcvtrantypecode);
 				if(vtrantypecode == null) {
-					throw new Exception("没有找到对应的单据类型对应关系");
+					throw new Exception("没有找到对应的上下游单据类型关系");
 				}
 				String ctrantypeid = getBillTypeId(pk_group, "4D", vtrantypecode);
 				PV.getParentVO().setCtrantypeid(ctrantypeid);
@@ -1722,20 +1722,15 @@ public class RestForWMSimpl {
 				
 				String ccprkCode = getTransformCode(pk_group, "46", scddlxbm);
 				if(ccprkCode == null) {
-					throw new Exception("没有找到对应的单据类型对应关系");
+					throw new Exception("没有找到对应的上下游单据类型关系");
 				}
 				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
-				
 				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //当生产订单类型为返工流程生产订单时，产成品入库也设为该类型
-					pv.getHead().setVtrantypecode("46-Cxx-10");
-					pv.getHead().setCtrantypeid("1001A2100000002LVM5K");
 					pbv.setBreworkflag(UFBoolean.TRUE);
-				}else {
-//					pv.getHead().setVtrantypecode("46-01");
-//					pv.getHead().setCtrantypeid("0001A110000000002DXT");
-					pv.getHead().setVtrantypecode(ccprkCode);
-					pv.getHead().setCtrantypeid(ccprkId);
 				}
+				pv.getHead().setVtrantypecode(ccprkCode);
+				pv.getHead().setCtrantypeid(ccprkId);
+
 				pbv.setNassistnum(pbv.getNshouldassistnum());
 				pbv.setNnum(pbv.getNshouldnum());
 				pbv.setVbatchcode(batchcode);
@@ -1926,21 +1921,15 @@ public class RestForWMSimpl {
 				
 				String ccprkCode = getTransformCode(pk_group, "46", scddlxbm);
 				if(ccprkCode == null) {
-					throw new Exception("没有找到对应的单据类型对应关系");
+					throw new Exception("没有找到对应的上下游单据类型关系");
 				}
 				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
-				
 				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //当生产订单类型为返工流程生产订单时，产成品入库也设为该类型
-					pv.getHead().setVtrantypecode("46-Cxx-10");
-					pv.getHead().setCtrantypeid("1001A2100000002LVM5K");
 					Breworkflag = UFBoolean.TRUE;
-//					pbv.setBreworkflag(UFBoolean.TRUE);
-				}else {
-					pv.getHead().setVtrantypecode(ccprkCode);
-					pv.getHead().setCtrantypeid(ccprkId);
-//					pv.getHead().setVtrantypecode("46-01");
-//					pv.getHead().setCtrantypeid("0001A110000000002DXT");	
 				}
+				pv.getHead().setVtrantypecode(ccprkCode);
+				pv.getHead().setCtrantypeid(ccprkId);
+				
 				FinProdInBodyVO[] pbvs = pv.getBodys();
 				List<String> sqllist = new ArrayList();
 				Map sendmap = new HashMap();
@@ -2348,21 +2337,18 @@ public class RestForWMSimpl {
 				pv.getHead().setCtrantypeid("0001A110000000002DXT");
 				pv.getHead().setVdef1(wmsID);
 				FinProdInBodyVO pbv = pv.getBody(0);
+				
 				String ccprkCode = getTransformCode(pk_group, "46", scddlxbm);
 				if(ccprkCode == null) {
-					throw new Exception("没有找到对应的单据类型对应关系");
+					throw new Exception("没有找到对应的上下游单据类型关系");
 				}
 				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
 				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //当生产订单类型为返工流程生产订单时，产成品入库也设为该类型
-					pv.getHead().setVtrantypecode("46-Cxx-10");
-					pv.getHead().setCtrantypeid("1001A2100000002LVM5K");
 					pbv.setBreworkflag(UFBoolean.TRUE);
-				}else {
-					pv.getHead().setVtrantypecode(ccprkCode);
-					pv.getHead().setCtrantypeid(ccprkId);
-//					pv.getHead().setVtrantypecode("46-01");
-//					pv.getHead().setCtrantypeid("0001A110000000002DXT");	
 				}
+				pv.getHead().setVtrantypecode(ccprkCode);
+				pv.getHead().setCtrantypeid(ccprkId);
+				
 				String zcp = queryOne("select o.cmaterialid from mm_mo_planoutput p inner join mm_mo o on p.cmoid=o.cmoid where p.cplanoutputid='"+lfcpvo.getCplanoutputid()+"'");
 				pbv.setNassistnum(pbv.getNshouldassistnum());
 				pbv.setNnum(pbv.getNshouldnum());
