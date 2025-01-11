@@ -111,7 +111,7 @@ public class N_55A2_APPROVE extends AbstractPfAction<PMOAggVO>
 			  map.put("mainNum", pbv[j].getNastnum().toString());
 			  map.put("manualNum", pbv[j].getVdef14());
 			  map.put("workshopSrcSystemId", pbv[j].getCwkid());
-			  map.put("typeIdSrcSystemId", pbv[j].getCteamid());
+			  map.put("typeIdSrcSystemId", phv.getCtrantypeid());
 			  
 			  String sql = "select p.cplanoutputid srcSystemId,p.vrowno lineNo,p.cmaterialid productSrcSystemId,p.cunitid mainUnitSrcSystemId,p.castunitid auxiliaryUnitSrcSystemId,"
 			  		+ "p.nastplanoutputnum otherNum,p.nplanoutputnum otheMainNum,p.vchangerate conversionRate,(case when p.foutputtype=2 then 1 else 2 end) typeCode,p.dr delFlag from mm_mo_planoutput p "
