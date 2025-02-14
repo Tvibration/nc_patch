@@ -1,6 +1,9 @@
 package nc.pubitf.ic.wms.rest;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +18,7 @@ import nc.bs.framework.common.InvocationInfoProxy;
 import nc.bs.framework.common.NCLocator;
 import nc.bs.framework.server.ISecurityTokenCallback;
 import nc.bs.ic.pub.env.ICBSContext;
+import nc.bs.pub.filesystem.IFileSystemService;
 import nc.bs.pub.pf.PfUtilTools;
 import nc.impl.ic.util.DateCalUtil;
 import nc.impl.obm.pattern.data.bill.BillQuery;
@@ -53,6 +57,7 @@ import nc.vo.ic.pub.util.NCBaseTypeUtils;
 import nc.vo.pub.AggregatedValueObject;
 import nc.vo.pub.BusinessException;
 import nc.vo.pub.VOStatus;
+import nc.vo.pub.filesystem.NCFileNode;
 import nc.vo.pub.lang.UFDate;
 import nc.vo.pub.lang.UFDateTime;
 import nc.vo.pub.lang.UFDouble;
@@ -67,21 +72,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONString;
 
 public class WmsSaleoutNCRestImpl {
-
-	public static String getValue(String key) {
-		Properties proper = null;
-		if (proper == null) {
-			try {
-				proper = new Properties();
-				proper.load(WmsSaleoutNCRestImpl.class.getClassLoader().getResourceAsStream("Wmsconfig.properties"));
-			} catch (Exception e) {
-				e.printStackTrace();
-				proper = null;
-				return null;
-			}
-		}
-		return proper.getProperty(key);
-	}
 
 	// 状态码常量
 	private static final String STATUS_SUCCESS = "1";
@@ -122,6 +112,9 @@ public class WmsSaleoutNCRestImpl {
 	}
 
 	public JSONString FilePostToSaleOut(JSONObject requestJson) {
+		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //设置集团环境变量
+
 		JSONObject response = new JSONObject();
 		response.put("status", STATUS_FAIL); // 默认失败
 
