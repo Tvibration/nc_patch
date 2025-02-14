@@ -86,19 +86,19 @@ public class WmsSaleoutNCRestImpl {
 	public JSONString wmsDeliveryTo4C(JSONObject  str){
 
 		JSONObject retjson = new JSONObject();
-		retjson.put("Status", "0");//??????
+		retjson.put("Status", "0");//默认失败
 
 		BaseDAO dao = new BaseDAO();
 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //???ü??????????
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //设置集团环境变量
 		String psnid = str.getString("userID");
 		String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+psnid+"'";
 		String userID = "";
 		try {
 			userID = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 		} catch (DAOException e2) {
-			retjson.put("ReturnMessage", "??????ID??????"+e2.getMessage());
+			retjson.put("ReturnMessage", "查询用户ID报错："+e2.getMessage());
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -108,31 +108,31 @@ public class WmsSaleoutNCRestImpl {
 		try {
 			approverID = (String) dao.executeQuery(sql_approverid, new ColumnProcessor());
 		} catch (DAOException e2) {
-			retjson.put("ReturnMessage", "??????ID??????"+e2.getMessage());
+			retjson.put("ReturnMessage", "查询用户ID报错："+e2.getMessage());
 			return RestUtils.toJSONString(retjson);
 		}
 
 		if(StringUtils.isEmpty(userID) || StringUtils.isEmpty(approverID) ) {
-			retjson.put("ReturnMessage", "???????PK??????PK????????[????????????]");
+			retjson.put("ReturnMessage", "根据人员PK查询用户PK为空，请检查[制单人、审批人]");
 			return RestUtils.toJSONString(retjson);
 		}
 
 		InvocationInfoProxy.getInstance().setUserId(userID);
 
 		SaleOutVO[] saveVOS;
-		String deliveryhid = str.getString("cbillid");//??????ID
+		String deliveryhid = str.getString("cbillid");//发货单ID
 
 
-		IDeliveryQueryAPI deliveryService = NCLocator.getInstance().lookup( IDeliveryQueryAPI.class);//??????API
+		IDeliveryQueryAPI deliveryService = NCLocator.getInstance().lookup( IDeliveryQueryAPI.class);//发货单API
 		DeliveryVO[] srcvos = null;
 		try {
 			srcvos = deliveryService.queryVOByIDs(new String[] {deliveryhid});
 		} catch (BusinessException e1) {
-			retjson.put("ReturnMessage", "???????????????"+e1.getMessage());
+			retjson.put("ReturnMessage", "查询发货单报错："+e1.getMessage());
 			return RestUtils.toJSONString(retjson);
 		}
 		if(srcvos == null || srcvos.length == 0) {
-			retjson.put("ReturnMessage", "?????????????");
+			retjson.put("ReturnMessage", "发货单不存在！");
 			return RestUtils.toJSONString(retjson);
 		}
 		DeliveryBVO[] srcbvos = srcvos[0].getChildrenVO();
@@ -157,7 +157,7 @@ public class WmsSaleoutNCRestImpl {
 			JSONObject wmsbvo = bodylists.getJSONObject(i);
 			String wmsbid = wmsbvo.getString("cbill_bid");
 			if(!srcbids.contains(wmsbid)) {
-				retjson.put("ReturnMessage", "??????["+srcvos[0].getParentVO().getVbillcode()+"]?в??????У?["+wmsbid+"]??");
+				retjson.put("ReturnMessage", "发货单["+srcvos[0].getParentVO().getVbillcode()+"]中不存在行：["+wmsbid+"]！");
 				return RestUtils.toJSONString(retjson);
 			}else {
 				for(DeliveryBVO srcbvo : srcbvos) {
@@ -171,12 +171,12 @@ public class WmsSaleoutNCRestImpl {
 		}
 		srcvos[0].setChildren(DeliveryBVO.class, wmsBodys.toArray(new DeliveryBVO[0]));
 
-		//?????????????????????
+		//调用单据转换规则生成出库单
 		AggregatedValueObject[] destVos = null;
 		try {
 			destVos = getDestAggVO("4331","4C",srcvos);
 		} catch (BusinessException e1) {
-			retjson.put("ReturnMessage", "??е?????????????"+e1.getMessage());
+			retjson.put("ReturnMessage", "执行单据转换规则报错："+e1.getMessage());
 			return RestUtils.toJSONString(retjson);
 		}
 		List<SaleOutVO> saleoutVOS = new ArrayList();
@@ -194,9 +194,9 @@ public class WmsSaleoutNCRestImpl {
 				destVo.getHead().setVtrantypecode("4C-Cxx-04");
 			}
 
-			List<SaleOutBodyVO> newbodys = new ArrayList<>();//???????????????
+			List<SaleOutBodyVO> newbodys = new ArrayList<>();//拆行新增的表体行
 			Map<String, UFDouble> rownos = new HashMap<String, UFDouble>();
-			for (int j = 0; j < bodylists.size(); j++) {//????????????????????
+			for (int j = 0; j < bodylists.size(); j++) {//处理转换后销售出库的字段
 				JSONObject wmsbvo = bodylists.getJSONObject(j);
 				String wmsbid = wmsbvo.getString("cbill_bid");
 				String nnum = wmsbvo.getString("nnum");
@@ -224,7 +224,7 @@ public class WmsSaleoutNCRestImpl {
 
 						bvo.setNnum(new UFDouble(nnum));
 						bvo.setNassistnum(new UFDouble(nastnum));
-//							destVo.getChildrenVO()[i].setVnotebody(clocationCode);//??λ?????????
+//							destVo.getChildrenVO()[i].setVnotebody(clocationCode);//货位不知道放哪
 						bvo.setClocationid(clocationCode);
 						bvo.setCbodywarehouseid(cwarehouseid);
 						UFDouble fsl = bvo.getNassistnum();
@@ -236,7 +236,7 @@ public class WmsSaleoutNCRestImpl {
 							bvo.setVbatchcode(vbatchcode);
 							bvo.setPk_batchcode(pk_batchcode);
 						} catch (DAOException e2) {
-							retjson.put("ReturnMessage", "??????κ?ID??????"+e2.getMessage());
+							retjson.put("ReturnMessage", "查询批次号ID报错："+e2.getMessage());
 							return RestUtils.toJSONString(retjson);
 						}
 						if(StringUtils.isEmpty(pk_batchcode)) {
@@ -258,12 +258,12 @@ public class WmsSaleoutNCRestImpl {
 //							bvo.setCrowno(null);
 						bvo.setStatus(VOStatus.NEW);
 
-						// ???????????????????????????
-						bvo.setNorigtaxmny(fsl.multiply(bvo.getNqtorigtaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//?????? = ??????? * ??????
-						bvo.setNcaltaxmny(bvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//??????
-						bvo.setNorigmny(bvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//??????
-						bvo.setNtaxmny(fsl.multiply(bvo.getNqttaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//?????????
-						bvo.setNmny(bvo.getNtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//??????????
+						// 修复价格是外币时，转换价格出错问题
+						bvo.setNorigtaxmny(fsl.multiply(bvo.getNqtorigtaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//价税合计 = 含税净价 * 辅数量
+						bvo.setNcaltaxmny(bvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//计税金额
+						bvo.setNorigmny(bvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//无税金额
+						bvo.setNtaxmny(fsl.multiply(bvo.getNqttaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//本币价税合计
+						bvo.setNmny(bvo.getNtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//本币无税金额
 						bvo.setNqtunitnum(fsl);
 						bvo.setNtax(bvo.getNtaxmny().sub(bvo.getNmny()));
 						bvo.setVnotebody(vnotebody);
@@ -281,29 +281,29 @@ public class WmsSaleoutNCRestImpl {
 			saleoutVOS.add(destVo);
 		}
 
-		ISaleOutMaintain ISaleOutMaintain = NCLocator.getInstance().lookup( ISaleOutMaintain.class);//????API
+		ISaleOutMaintain ISaleOutMaintain = NCLocator.getInstance().lookup( ISaleOutMaintain.class);//出库单API
 		ISaleOutMaintainAPI saleoutApi = NCLocator.getInstance().lookup(ISaleOutMaintainAPI.class);
 
 		try{
-// 			???????????????????????????
+// 			防止单据转换规则出现交易类型为空
 //			if (destVo.getHead().getCtrantypeid() == null) {
 //				String transtype = "45-01";
 //				String transtypePk = "0001N710000000001BOB";
 //				destVo.getHead().setCtrantypeid(transtypePk);
 //				destVo.getHead().setVtrantypecode(transtype);
 //			}
-			InvocationInfoProxy.getInstance().setUserId(userID);//????????????
-			saveVOS = ISaleOutMaintain.insert(saleoutVOS.toArray(new SaleOutVO[0]));//????
+			InvocationInfoProxy.getInstance().setUserId(userID);//设置系统操作人
+			saveVOS = ISaleOutMaintain.insert(saleoutVOS.toArray(new SaleOutVO[0]));//保存
 			if(saveVOS != null && saveVOS.length > 0) {
-				InvocationInfoProxy.getInstance().setUserId(approverID);//????????????
+				InvocationInfoProxy.getInstance().setUserId(approverID);//设置系统操作人
 				InvocationInfoProxy.getInstance().setBizDateTime(dtaudittime.getMillis());
 				saveVOS[0].getParentVO().setTaudittime(dtaudittime.getDate());
 				saveVOS[0].getParentVO().setApprover(approverID);
-				saveVOS = saleoutApi.signBills(saveVOS);//???
+				saveVOS = saleoutApi.signBills(saveVOS);//签字
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			retjson.put("ReturnMessage", "???????????????????"+e);
+			retjson.put("ReturnMessage", "销售出库单保存并签字报错："+e);
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -314,7 +314,7 @@ public class WmsSaleoutNCRestImpl {
 			}
 			retjson.put("Status", "1");
 			retjson.put("ResultBillcode", vbillCodes.get(0));
-			retjson.put("ReturnMessage", "NC????????????????");
+			retjson.put("ReturnMessage", "NC销售出库保存并签字成功！");
 		}
 
 
@@ -323,7 +323,7 @@ public class WmsSaleoutNCRestImpl {
 	}
 
 	/**
-	 * ?????????????? sourcetype???????????? desttype??????????? vo????????
+	 * 调用单据转换规则 sourcetype：源头单据类型 desttype：目标单据类型 vo：转换实体
 	 *
 	 * @return
 	 */
@@ -337,24 +337,24 @@ public class WmsSaleoutNCRestImpl {
 	public JSONString wmsSaleoutTo4C(JSONObject  str)  {
 
 		JSONObject retjson = new JSONObject();
-		retjson.put("Status", "0");//??????
+		retjson.put("Status", "0");//默认失败
 
 		BaseDAO dao = new BaseDAO();
 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //???ü??????????
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //设置集团环境变量
 		String psnid = str.getString("approverID");
 		String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+psnid+"'";
 		String approverID = "";
 		try {
 			approverID = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 		} catch (DAOException e2) {
-			retjson.put("ReturnMessage", "??????ID??????"+e2.getMessage());
+			retjson.put("ReturnMessage", "查询用户ID报错："+e2.getMessage());
 			return RestUtils.toJSONString(retjson);
 		}
 
 		if(StringUtils.isEmpty(approverID) ) {
-			retjson.put("ReturnMessage", "???????PK??????PK????????[??????]");
+			retjson.put("ReturnMessage", "根据人员PK查询用户PK为空，请检查[审批人]");
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -362,15 +362,15 @@ public class WmsSaleoutNCRestImpl {
 
 		SaleOutVO[] saveVOs;
 		SaleOutVO destVo = new SaleOutVO();
-		String billid = str.getString("cbillid");//??????ID
+		String billid = str.getString("cbillid");//出库表头ID
 
-		ISaleOutMaintain ISaleOutMaintain = NCLocator.getInstance().lookup( ISaleOutMaintain.class);//????API
+		ISaleOutMaintain ISaleOutMaintain = NCLocator.getInstance().lookup( ISaleOutMaintain.class);//出库单API
 		SaleOutVO[] aggsovo = null;
 		BillQuery<SaleOutVO> query = new BillQuery<SaleOutVO>(
 				SaleOutVO.class);
 		aggsovo = query.query(new String[] {billid});
 		if(aggsovo == null || aggsovo.length == 0) {
-			retjson.put("ReturnMessage", "???????????");
+			retjson.put("ReturnMessage", "出库单不存在！");
 			return RestUtils.toJSONString(retjson);
 		}else {
 			destVo = aggsovo[0];
@@ -384,12 +384,12 @@ public class WmsSaleoutNCRestImpl {
 
 		JSONArray bodylists = str.getJSONArray("list");
 
-		//?????????????????????
+		//调用单据转换规则生成出库单
 		destVo.getParentVO().setCwarehouseid(cwarehouseid);
 //			destVo.getParentVO().setTaudittime(new UFDate(taudittime));
 		destVo.getParentVO().setApprover(approverID);
 		destVo.getParentVO().setStatus(VOStatus.UPDATED);
-		Map<String,String> rows_map = new HashMap<String,String>();  //???????????δ????ID,????ж?????????????
+		Map<String,String> rows_map = new HashMap<String,String>();  //用来记录是否多次传同个ID,以便判断是修改还是增行
 		List<SaleOutBodyVO> bodylist = new ArrayList();
 		for (int j = 0; j < bodylists.size(); j++) {
 			JSONObject wmsbvo = bodylists.getJSONObject(j);
@@ -447,7 +447,7 @@ public class WmsSaleoutNCRestImpl {
 					try {
 						pk_batchcode = (String) dao.executeQuery(sql_batch, new ColumnProcessor());
 					} catch (DAOException e2) {
-						retjson.put("ReturnMessage", "??????κ?ID??????"+e2.getMessage());
+						retjson.put("ReturnMessage", "查询批次号ID报错："+e2.getMessage());
 						return RestUtils.toJSONString(retjson);
 					}
 					if(StringUtils.isEmpty(pk_batchcode)) {
@@ -469,12 +469,12 @@ public class WmsSaleoutNCRestImpl {
 					tabvo.setCstateid(cstateid);
 					tabvo.setStatus(VOStatus.UPDATED);
 					tabvo.setVnotebody(vnotebody);
-					// ???????????????????????????
-					tabvo.setNorigtaxmny(fsl.multiply(tabvo.getNqtorigtaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//?????? = ??????? * ??????
-					tabvo.setNcaltaxmny(tabvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//??????
-					tabvo.setNorigmny(tabvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//??????
-					tabvo.setNtaxmny(fsl.multiply(tabvo.getNqttaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//?????????
-					tabvo.setNmny(tabvo.getNtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//??????????
+					// 修复价格是外币时，转换价格出错问题
+					tabvo.setNorigtaxmny(fsl.multiply(tabvo.getNqtorigtaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//价税合计 = 含税净价 * 辅数量
+					tabvo.setNcaltaxmny(tabvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//计税金额
+					tabvo.setNorigmny(tabvo.getNorigtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//无税金额
+					tabvo.setNtaxmny(fsl.multiply(tabvo.getNqttaxnetprice()).setScale(2, UFDouble.ROUND_HALF_UP));//本币价税合计
+					tabvo.setNmny(tabvo.getNtaxmny().div(ntaxrate).setScale(2, UFDouble.ROUND_HALF_UP));//本币无税金额
 					tabvo.setNqtunitnum(fsl);
 					tabvo.setNtax(tabvo.getNtaxmny().sub(tabvo.getNmny()));
 
@@ -486,32 +486,32 @@ public class WmsSaleoutNCRestImpl {
 
 		try {
 			try{
-//	 			???????????????????????????
+//	 			防止单据转换规则出现交易类型为空
 //				if (destVo.getHead().getCtrantypeid() == null) {
 //					String transtype = "45-01";
 //					String transtypePk = "0001N710000000001BOB";
 //					destVo.getHead().setCtrantypeid(transtypePk);
 //					destVo.getHead().setVtrantypecode(transtype);
 //				}
-				InvocationInfoProxy.getInstance().setUserId(approverID);//????????????
-				saveVOs = ISaleOutMaintain.update(new SaleOutVO[] {destVo},new SaleOutVO[] {oldvo});//????
+				InvocationInfoProxy.getInstance().setUserId(approverID);//设置系统操作人
+				saveVOs = ISaleOutMaintain.update(new SaleOutVO[] {destVo},new SaleOutVO[] {oldvo});//保存
 			} catch (Exception e) {
-				throw new Exception("??????????汨????"+e);
+				throw new Exception("销售出库单保存报错："+e);
 			}
 			try{
 				if(saveVOs != null && saveVOs.length > 0) {
 					ISaleOutMaintainAPI saleoutApi = NCLocator.getInstance().lookup(ISaleOutMaintainAPI.class);
 					UFDateTime taudittime_t = new UFDateTime(taudittime);
 					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					saveVOs = saleoutApi.signBills(saveVOs);//???
+					saveVOs = saleoutApi.signBills(saveVOs);//签字
 				}
 			} catch (Exception e) {
-				throw new Exception("???????????????"+e);
+				throw new Exception("销售出库单签字报错："+e);
 			}
 
 		}catch (Exception e) {
 			e.printStackTrace();
-			retjson.put("ReturnMessage", "???????????????"+e);
+			retjson.put("ReturnMessage", "销售出库单接口报错："+e);
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -523,7 +523,7 @@ public class WmsSaleoutNCRestImpl {
 			}
 			retjson.put("Status", "1");
 			retjson.put("ResultBillcode", vbillCodes.get(0));
-			retjson.put("ReturnMessage", "NC????????????????");
+			retjson.put("ReturnMessage", "NC销售出库保存并签字成功！");
 		}
 
 
@@ -533,27 +533,27 @@ public class WmsSaleoutNCRestImpl {
 
 	public JSONString WmsUpdateM4R(JSONObject str) {
 		JSONObject retjson = new JSONObject();
-		retjson.put("Status", "0");//??????
+		retjson.put("Status", "0");//默认失败
 
 		BaseDAO dao = new BaseDAO();
 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //???ü??????????
-		String cspecialhid = str.getString("cspecialhid");//???????
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //设置集团环境变量
+		String cspecialhid = str.getString("cspecialhid");//盘点单主键
 		String hsql = "select vbillcode from ic_invcount_h iih where cspecialhid = '"+cspecialhid+"' and fbillflag = 1";
 		String vbillcode = "";
 		try {
 			vbillcode = (String) dao.executeQuery(hsql, new ColumnProcessor());
 		} catch (DAOException e2) {
-			retjson.put("ReturnMessage", "??????????"+e2.getMessage());
+			retjson.put("ReturnMessage", "查询盘点单报错"+e2.getMessage());
 			return RestUtils.toJSONString(retjson);
 		}
 		if(StringUtils.isEmpty(vbillcode)) {
-			retjson.put("ReturnMessage", "????????????????????????????????" + cspecialhid);
+			retjson.put("ReturnMessage", "请检查盘点单主键是否正确，盘点单状态是否正确：" + cspecialhid);
 			return RestUtils.toJSONString(retjson);
 		}
 		JSONArray bodylists = str.getJSONArray("list");
-		String msg = "?????"+vbillcode+",?????У?";
+		String msg = "盘点单："+vbillcode+",表体行：";
 		for (int j = 0; j < bodylists.size(); j++) {
 			JSONObject wmsbvo = bodylists.getJSONObject(j);
 			IUAPQueryBS query = NCLocator.getInstance().lookup(IUAPQueryBS.class);
@@ -566,7 +566,7 @@ public class WmsSaleoutNCRestImpl {
 				blist = (ArrayList<InvCountBodyVO>) query.executeQuery(sql,
 						new BeanListProcessor(InvCountBodyVO.class));
 			} catch (BusinessException e1) {
-				retjson.put("ReturnMessage", "????????????"+e1.getMessage());
+				retjson.put("ReturnMessage", "查询盘点单表体报错"+e1.getMessage());
 				return RestUtils.toJSONString(retjson);
 			}
 
@@ -598,27 +598,27 @@ public class WmsSaleoutNCRestImpl {
 					dao.executeUpdate(sql2.toString());
 					msg = msg + "'cspecialbid',";
 				} catch (DAOException e) {
-					retjson.put("ReturnMessage", "???????????"+e.getMessage());
+					retjson.put("ReturnMessage", "更新盘点单报错"+e.getMessage());
 					return RestUtils.toJSONString(retjson);
 				}
 				String sql1 = "update ic_invcount_h set inputmode  ='1' where cspecialhid = (select cspecialhid from ic_invcount_b where cspecialbid = '"+cspecialbid+"')";
 				try {
 					dao.executeUpdate(sql1.toString());
 				} catch (DAOException e) {
-					retjson.put("ReturnMessage", "???????????"+e.getMessage());
+					retjson.put("ReturnMessage", "更新盘点单报错"+e.getMessage());
 					return RestUtils.toJSONString(retjson);
 				}
 			}else {
-				retjson.put("ReturnMessage", "??????????????У?"+sql);
+				retjson.put("ReturnMessage", "找不到对应的盘点单行："+sql);
 				return RestUtils.toJSONString(retjson);
 			}
 		}
 		if(msg.length()>0) {
 			retjson.put("Status", "1");
-			retjson.put("ReturnMessage", "?????д???:"+msg.substring(0, msg.length()-1));
+			retjson.put("ReturnMessage", "盘点单回写成功:"+msg.substring(0, msg.length()-1));
 			return RestUtils.toJSONString(retjson);
 		}else {
-			retjson.put("ReturnMessage", "?????д???,??????д?????????:"+msg.substring(0, msg.length()-1));
+			retjson.put("ReturnMessage", "盘点单回写失败,请确认回写信息是否正确:"+msg.substring(0, msg.length()-1));
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -671,11 +671,11 @@ public class WmsSaleoutNCRestImpl {
 
 	public JSONString WmsInsertM4N(JSONObject str) {
 		JSONObject retjson = new JSONObject();
-		retjson.put("Status", "0");//??????
+		retjson.put("Status", "0");//默认失败
 
 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //???ü??????????
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //设置集团环境变量
 
 
 		IBatchCodeQuery batchcodeQuery = NCLocator.getInstance().lookup(IBatchCodeQuery.class);
@@ -707,7 +707,7 @@ public class WmsSaleoutNCRestImpl {
 					billmaker = userID;
 				}
 			} catch (DAOException e2) {
-				retjson.put("ReturnMessage", "??????ID??????"+e2.getMessage());
+				retjson.put("ReturnMessage", "查询用户ID报错："+e2.getMessage());
 				return RestUtils.toJSONString(retjson);
 			}
 
@@ -756,7 +756,7 @@ public class WmsSaleoutNCRestImpl {
 				xtzhBodys.add(bvo);
 			}
 		} catch (Exception e) {
-			retjson.put("ReturnMessage", "JSON??????????"+ e);
+			retjson.put("ReturnMessage", "JSON处理报错："+ e);
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -770,12 +770,12 @@ public class WmsSaleoutNCRestImpl {
 						new String[] { bodyvo.getCmaterialoid()},
 						new String[] { bodyvo.getVbatchcode()});
 				if(batchcodes != null && batchcodes.length > 0){
-					bodyvo.setPk_batchcode(batchcodes[0].getPk_batchcode());// ???κ????????
-					bodyvo.setDproducedate(batchcodes[0].getDproducedate());// ????????
-					bodyvo.setDvalidate(batchcodes[0].getDvalidate());// ?Ч????
+					bodyvo.setPk_batchcode(batchcodes[0].getPk_batchcode());// 批次号档案主键
+					bodyvo.setDproducedate(batchcodes[0].getDproducedate());// 生产日期
+					bodyvo.setDvalidate(batchcodes[0].getDvalidate());// 失效日期
 				}
 			} catch (BusinessException e) {
-				retjson.put("ReturnMessage", "???????κ?["+bodyvo.getVbatchcode()+"]??????????????"+e);
+				retjson.put("ReturnMessage", "根据批次号["+bodyvo.getVbatchcode()+"]获取批次主键失败"+e);
 				return RestUtils.toJSONString(retjson);
 			}
 
@@ -793,7 +793,7 @@ public class WmsSaleoutNCRestImpl {
 				res = iMaitain.insert(new TransformVO[]{aggvo});
 				res = (TransformVO[])service.processAction("APPROVE", "4N", null, aggvo, null, null);
 			} catch (BusinessException e1) {
-				throw new Exception("??????????????????????"+e1);
+				throw new Exception("形态转换单保存审批报错："+e1);
 			}
 //  	iappApi.approve(new TransformVO[]{aggvo}, null);
 			TransformVO outaggvo = (TransformVO) aggvo.clone();
@@ -837,7 +837,7 @@ public class WmsSaleoutNCRestImpl {
 				processBizDate(aggoutvo,intime);
 
 			} catch (BusinessException e1) {
-				throw new Exception("???????????????????????"+e1);
+				throw new Exception("形态转换生成其它出入库单失败："+e1);
 			}
 
 			IGeneralOutMaintainAPI outApi = NCLocator.getInstance().lookup(IGeneralOutMaintainAPI.class);
@@ -848,7 +848,7 @@ public class WmsSaleoutNCRestImpl {
 				returnaggvos = outApi.signBills(returnaggvos);
 				retjson.put("m4iBillcode",returnaggvos[0].getHead().getVbillcode() );
 			} catch (Exception e) {
-				throw new Exception("???????????????????"+e);
+				throw new Exception("其它出库单保存签字失败："+e);
 			}
 
 			try {
@@ -861,38 +861,38 @@ public class WmsSaleoutNCRestImpl {
 				returninaggvos = inApi.signBills(returninaggvos);
 				retjson.put("Status", "1");
 				retjson.put("m4aBillcode",returninaggvos[0].getHead().getVbillcode() );
-				retjson.put("ReturnMessage", "???????????????");
+				retjson.put("ReturnMessage", "形态转换处理成功！");
 				return RestUtils.toJSONString(retjson);
 			} catch (Exception e) {
-				throw new Exception("??????????????????"+e);
+				throw new Exception("其它入库单保存签字失败："+e);
 			}
 
 		} catch (Exception e) {
-			retjson.put("ReturnMessage", "???????????"+e);
+			retjson.put("ReturnMessage", "单据处理失败："+e);
 			return RestUtils.toJSONString(retjson);
 		}
 	}
 
 	public JSONString WmsAddM4nBody(JSONObject str) {
 		JSONObject retjson = new JSONObject();
-		retjson.put("Status", "0");//??????
+		retjson.put("Status", "0");//默认失败
 
 		BaseDAO dao = new BaseDAO();
 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //???ü??????????
-		String cspecialhid = str.getString("cspecialhid");//???????
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //设置集团环境变量
+		String cspecialhid = str.getString("cspecialhid");//盘点单主键
 		IInvCountAdjust queryInvCount = NCLocator.getInstance().lookup(IInvCountAdjust.class);
 		IInvCountMaintain saveInvCount = NCLocator.getInstance().lookup(IInvCountMaintain.class);
 		InvCountBillVO[] invCountVOs;
 		try {
 			invCountVOs = queryInvCount.queryInvCountByIds(new String[]{cspecialhid});
 			if(invCountVOs == null || invCountVOs.length == 0){
-				retjson.put("ReturnMessage", "???????????????????????,??????" + cspecialhid);
+				retjson.put("ReturnMessage", "根据主键获取不到对应的盘点单,主键：" + cspecialhid);
 				return RestUtils.toJSONString(retjson);
 			}
 		} catch (BusinessException e3) {
-			retjson.put("ReturnMessage", "????????????????????" + e3);
+			retjson.put("ReturnMessage", "根据主键获取盘点单报错：" + e3);
 			return RestUtils.toJSONString(retjson);
 		}
 
@@ -911,14 +911,14 @@ public class WmsSaleoutNCRestImpl {
 		InvCountBodyVO oldbody = bodys[0];
 		InvCountBodyVO newbody = new InvCountBodyVO();
 		JSONObject wmsbvo = str;
-		String material = wmsbvo.getString("cmaterialoid");//????
-		String casscustid = wmsbvo.getString("casscustid");//???
-		String castunitid = wmsbvo.getString("castunitid");//????λ
-		String cunitid = wmsbvo.getString("cunitid");//????λ
-		String vchangerate = wmsbvo.getString("vchangerate");//??????
-		String batchcode = wmsbvo.getString("batchcode");//???κ?
-		String sncountastnum = wmsbvo.getString("ncountastnum");//??????
-		String sncountnum = wmsbvo.getString("ncountnum");//??????
+		String material = wmsbvo.getString("cmaterialoid");//物料
+		String casscustid = wmsbvo.getString("casscustid");//客户
+		String castunitid = wmsbvo.getString("castunitid");//辅单位
+		String cunitid = wmsbvo.getString("cunitid");//主单位
+		String vchangerate = wmsbvo.getString("vchangerate");//换算率
+		String batchcode = wmsbvo.getString("batchcode");//批次号
+		String sncountastnum = wmsbvo.getString("ncountastnum");//辅数量
+		String sncountnum = wmsbvo.getString("ncountnum");//主数量
 		String cstateid = wmsbvo.getString("cstateid");
 		UFDouble dncountastnum = new UFDouble(sncountastnum);
 		UFDouble dncountnum = new UFDouble(sncountnum);
@@ -931,13 +931,13 @@ public class WmsSaleoutNCRestImpl {
 						new String[] {material},
 						new String[] {batchcode});
 				if(batchcodes != null && batchcodes.length > 0){
-					newbody.setPk_batchcode(batchcodes[0].getPk_batchcode());// ???κ????????
-					newbody.setDproducedate(batchcodes[0].getDproducedate());// ????????
-					newbody.setDvalidate(batchcodes[0].getDvalidate());// ?Ч????
+					newbody.setPk_batchcode(batchcodes[0].getPk_batchcode());// 批次号档案主键
+					newbody.setDproducedate(batchcodes[0].getDproducedate());// 生产日期
+					newbody.setDvalidate(batchcodes[0].getDvalidate());// 失效日期
 					newbody.setCqualitylevelid(batchcodes[0].getCqualitylevelid());
 				}
 			} catch (BusinessException e) {
-				retjson.put("ReturnMessage", "???????κ?["+batchcode+"]??????????????"+e);
+				retjson.put("ReturnMessage", "根据批次号["+batchcode+"]获取批次主键失败"+e);
 				return RestUtils.toJSONString(retjson);
 			}
 		}
@@ -976,16 +976,16 @@ public class WmsSaleoutNCRestImpl {
 					if(rebvo.getCrowno().equals(crowno)) {
 						retjson.put("Status", "1");
 						retjson.put("newbodyid",rebvo.getCspecialbid() );
-						retjson.put("ReturnMessage", "???????????????");
+						retjson.put("ReturnMessage", "盘点明细新增成功！");
 						return RestUtils.toJSONString(retjson);
 					}
 				}
 			}
 		} catch (BusinessException e) {
-			retjson.put("ReturnMessage", "????????????б?????"+e);
+			retjson.put("ReturnMessage", "插入盘点单表体行报错："+e);
 			return RestUtils.toJSONString(retjson);
 		}
-		retjson.put("ReturnMessage", "δ????????JSON?????"+str);
+		retjson.put("ReturnMessage", "未知错误，传入JSON数据："+str);
 		return RestUtils.toJSONString(retjson);
 	}
 
