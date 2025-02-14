@@ -83,6 +83,160 @@ public class WmsSaleoutNCRestImpl {
 		return proper.getProperty(key);
 	}
 
+	// 状态码常量
+	private static final String STATUS_SUCCESS = "1";
+	private static final String STATUS_FAIL = "0";
+
+	public static String getValue(String key) {
+		Properties proper = null;
+		if (proper == null) {
+			try {
+				proper = new Properties();
+				proper.load(WmsSaleoutNCRestImpl.class.getClassLoader().getResourceAsStream("Wmsconfig.properties"));
+			} catch (Exception e) {
+				e.printStackTrace();
+				proper = null;
+				return null;
+			}
+		}
+		return proper.getProperty(key);
+	}
+
+	private static String querysalesorgid(String org_code) {
+		if (StringUtils.isEmpty(org_code)) {
+			return null;
+		}
+		String sql = "select pk_salesorg from org_salesorg where code = '" + org_code + "'";
+		IUAPQueryBS bs = NCLocator.getInstance().lookup(IUAPQueryBS.class);
+		Object result;
+		try {
+			result = bs.executeQuery(sql, new ColumnProcessor());
+			if (null != result && !"".equals(result)) {
+				return result.toString();
+			} else {
+				return null;
+			}
+		} catch (BusinessException e) {
+			return null;
+		}
+	}
+
+	public JSONString FilePostToSaleOut(JSONObject requestJson) {
+		JSONObject response = new JSONObject();
+		response.put("status", STATUS_FAIL); // 默认失败
+
+		try {
+			// 1. 获取NC系统的安全令牌
+			ISecurityTokenCallback sc = NCLocator.getInstance().lookup(ISecurityTokenCallback.class);
+			sc.token("NCSystem".getBytes(), "pfxx".getBytes());
+
+			// 2. 解析并校验请求参数
+			validateRequestParameters(requestJson);
+
+			String userID = queryName("sm_user", "cuserid", "user_code", requestJson.getString("userCode"));
+			String billid = queryName("ic_saleout_h","cgeneralhid","VBILLCODE",requestJson.getString("saleOutBillCode")) ;
+			String pk_org = querysalesorgid(requestJson.getString("org_code"));;
+			JSONArray files = requestJson.getJSONArray("files");
+
+			// 3. 校验单据是否存在
+			if (!isBillExist(billid, pk_org)) {
+				throw new BusinessException("单据不存在，无法上传附件！");
+			}
+
+			// 4. 遍历文件列表并上传
+			JSONArray fileResults = new JSONArray();
+			for (int i = 0; i < files.size(); i++) {
+				JSONObject fileInfo = files.getJSONObject(i);
+				String fileName = fileInfo.getString("fileName");
+				fileName = fixEncoding(fileName); // 修复编码问题
+				String file = fileInfo.getString("file");
+
+				JSONObject fileResult = new JSONObject();
+				fileResult.put("fileName", fileName);
+
+				try {
+					// 解码Base64文件并上传
+					byte[] destBuffer = Base64.getDecoder().decode(file);
+					InputStream stream = new ByteArrayInputStream(destBuffer);
+					long length = destBuffer.length;
+
+					// 上传附件
+					IFileSystemService service = (IFileSystemService) NCLocator.getInstance()
+							.lookup(IFileSystemService.class);
+					NCFileNode node = service.createNewFileNodeWithStream(billid, fileName, userID, stream, length);
+
+					fileResult.put("status", STATUS_SUCCESS);
+					fileResult.put("message", "文件上传成功");
+				} catch (Exception e) {
+					fileResult.put("status", STATUS_FAIL);
+					fileResult.put("message", "文件上传失败：" + e.getMessage());
+				}
+
+				fileResults.add(fileResult);
+			}
+
+			// 5. 返回成功响应
+			response.put("status", STATUS_SUCCESS);
+			response.put("ReturnMessage", "文件上传完成");
+			response.put("fileResults", fileResults);
+			return RestUtils.toJSONString(response);
+
+		} catch (BusinessException e) {
+			response.put("ReturnMessage", "业务异常：" + e.getMessage());
+			return RestUtils.toJSONString(response);
+		} catch (Exception e) {
+			response.put("ReturnMessage", "系统错误：" + e.getMessage());
+			return RestUtils.toJSONString(response);
+		}
+	}
+
+	// ---------------------- 辅助方法 ----------------------
+
+	/**
+	 * 校验请求参数完整性
+	 */
+	private void validateRequestParameters(JSONObject requestJson) throws BusinessException {
+		String[] requiredFields = { "userCode", "saleOutBillCode", "org_code", "files" };
+		for (String field : requiredFields) {
+			if (!requestJson.containsKey(field) || requestJson.getString(field).isEmpty()) {
+				throw new BusinessException("缺少必要参数: " + field);
+			}
+		}
+
+		// 校验 files 是否为数组且不为空
+		JSONArray files = requestJson.getJSONArray("files");
+		if (files == null || files.isEmpty()) {
+			throw new BusinessException("files 参数不能为空");
+		}
+	}
+
+	/**
+	 * 修复文件名编码问题（UTF-8乱码）
+	 */
+	private String fixEncoding(String fileName) {
+		try {
+			// 如果客户端未正确编码，尝试从UTF-8转换到GBK
+			return new String(fileName.getBytes("GBK"), "UTF-8");
+		} catch (Exception e) {
+			return fileName; // 如果转换失败，返回原始值
+		}
+	}
+
+	/**
+	 * 校验单据是否存在
+	 */
+	private boolean isBillExist(String billid, String pk_org) throws BusinessException {
+		try {
+			String sql = "select ish.vbillcode from ic_saleout_h ish WHERE ish.cgeneralhid = '" + billid
+					+ "' AND  ish.PK_ORG IN('" + pk_org + "') AND ish.dr = 0";
+			String isentBill = (String) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql,
+					new ColumnProcessor());
+			return isentBill != null && !isentBill.isEmpty();
+		} catch (Exception e) {
+			throw new BusinessException("单据校验失败：" + e.getMessage());
+		}
+	}
+
 	public JSONString wmsDeliveryTo4C(JSONObject  str){
 
 		JSONObject retjson = new JSONObject();
