@@ -105,99 +105,99 @@ import nc.itf.ic.m45.self.IPurchaseInMaintain;
 import nc.itf.ic.m4d.IMaterialOutMaintain;
 
 public class RestForWMSimpl {
-	
+
 	private BaseDAO dao = new BaseDAO();
 	private IPFBusiAction pfaction = (IPFBusiAction) NCLocator.getInstance().lookup(IPFBusiAction.class);
 	private IBillQueryService IQ = (IBillQueryService) NCLocator.getInstance().lookup(IBillQueryService.class);
-	private ICLocationQuery ILQ = (ICLocationQuery) NCLocator.getInstance().lookup(ICLocationQuery.class);  //»õÎ»²éÑ¯·şÎñ½Ó¿Ú
+	private ICLocationQuery ILQ = (ICLocationQuery) NCLocator.getInstance().lookup(ICLocationQuery.class);  //è´§ä½æŸ¥è¯¢æœåŠ¡æ¥å£
 
 	public static String getValue(String key) {
-	  	  Properties proper = null;
-	    if (proper == null) {
-	      try {
-	        proper = new Properties();
-	        proper.load(RestForWMSimpl.class.getClassLoader().getResourceAsStream("Wmsconfig.properties"));
-	      } catch (Exception e) {
-	        e.printStackTrace();
-	        proper = null;
-	        return null;		
-	      }
-	    }
-	    return proper.getProperty(key);
-	  }
-	
+		Properties proper = null;
+		if (proper == null) {
+			try {
+				proper = new Properties();
+				proper.load(RestForWMSimpl.class.getClassLoader().getResourceAsStream("Wmsconfig.properties"));
+			} catch (Exception e) {
+				e.printStackTrace();
+				proper = null;
+				return null;
+			}
+		}
+		return proper.getProperty(key);
+	}
+
 	public JSONString Generate45(JSONObject jsonAy) {
 		returnvo returnJson = new returnvo();
 		PurchaseInVO[] result = null;
 		String billcode = "";
 		String successMessage = "";
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-		InvocationInfoProxy.getInstance().setUserId("1001A2100000001YCWTC");    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+		InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+		InvocationInfoProxy.getInstance().setUserId("1001A2100000001YCWTC");    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 		try {
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-			String vnote = jsonAy.getString("vnote");  //±¸×¢
-			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			String replenishflag = jsonAy.getString("replenishflag");  //ÊÇ·ñÍË¿â
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String replenishflag = jsonAy.getString("replenishflag");  //æ˜¯å¦é€€åº“
 			UFBoolean replenishflag2 = UFBoolean.FALSE;
 			if(replenishflag!=null&&replenishflag.equals("Y"))
 				replenishflag2 = UFBoolean.TRUE;
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			UFDate dmakedate_d = dmakedate_t.getDate();	
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
 			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-			
-//			String billCodes = jsonAy.getString("billCodes");  //²É¹º¶©µ¥ºÅÊı×é
-			
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+
+//			String billCodes = jsonAy.getString("billCodes");  //é‡‡è´­è®¢å•å·æ•°ç»„
+
 			String[] pks = null;
 			ArrayList<String> pks_list = new ArrayList<String>();
 			Map pks_map = new HashMap();
-			for(int i=0;i<list.size();i++) {  //½«µ¥ºÅ×ª»»ÎªPK
+			for(int i=0;i<list.size();i++) {  //å°†å•å·è½¬æ¢ä¸ºPK
 				String pk = list.getJSONObject(i).getString("srcSystemId")==null?"null":list.getJSONObject(i).getString("srcSystemId");
 				if(pks_map.get(pk)==null) {
 					pks_list.add(pk);
 					pks_map.put(pk, pk);
 				}
-					
+
 			}
 			pks = pks_list.toArray(new String[pks_list.size()]);
 //			if (billCodes.length()>2){
 //				billCodes = billCodes.substring(1, billCodes.length()-1);
 //				pks = billCodes.split(",");
 //				for(int j=0;j<pks.length;j++) {
-//					
+//
 //				}
 //			}else
-//				throw new Exception("µ¥¾İIDÊôĞÔÎª¿Õ£¬Çë¼ì²é´«Êä²ÎÊı£¡");
+//				throw new Exception("å•æ®IDå±æ€§ä¸ºç©ºï¼Œè¯·æ£€æŸ¥ä¼ è¾“å‚æ•°ï¼");
 			AbstractBill[] po_data = IQ.queryAbstractBillsByPks(OrderVO.class, pks);
-				
+
 			if (po_data==null||po_data[0]==null||po_data.length==0){
-				throw new Exception("´«ÊäµÄ²É¹º¶©µ¥IDÔÚÏµÍ³²»´æÔÚ»òÕßÒÑÉ¾³ı!");
+				throw new Exception("ä¼ è¾“çš„é‡‡è´­è®¢å•IDåœ¨ç³»ç»Ÿä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
 			}
-			
+
 //			ArrayList<OrderItemVO> oi_newt = new ArrayList<OrderItemVO>();
 //			UFDouble ntotalnum = UFDouble.ZERO_DBL;
 //			for (int t=0;t<po_data.length;t++){
 //				OrderItemVO[] oi = (OrderItemVO[])po_data[t].getChildrenVO();
 //				for (int r=0;r<list.size();r++){
-//					String srcSystemId_b = list.getJSONObject(r).getString("srcSystemId_b")==null?"null":list.getJSONObject(r).getString("srcSystemId_b");  //²É¹º¶©µ¥±íÌåID
-//					UFDouble nnum = list.getJSONObject(r).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(r).getString("nnum"));  //µ½»õÖ÷ÊıÁ¿
+//					String srcSystemId_b = list.getJSONObject(r).getString("srcSystemId_b")==null?"null":list.getJSONObject(r).getString("srcSystemId_b");  //é‡‡è´­è®¢å•è¡¨ä½“ID
+//					UFDouble nnum = list.getJSONObject(r).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(r).getString("nnum"));  //åˆ°è´§ä¸»æ•°é‡
 //					ntotalnum = ntotalnum.add(nnum);
 //					for (int s=0;s<oi.length;s++){
 //						String Crowno=oi[s].getPk_order_b()==null?"null":oi[s].getPk_order_b();
@@ -211,7 +211,7 @@ public class RestForWMSimpl {
 //			po_data[0].setChildrenVO(oi_newt.toArray(new OrderItemVO[list.size()]));
 //			OrderVO[] po_datas = {(OrderVO)po_data[0]};
 			PurchaseInVO[] PV = (PurchaseInVO[])PfUtilTools.runChangeDataAry("21", "45", po_data);
-			
+
 			for (int c=0;c<PV.length;c++){
 				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
 				PV[c].getParentVO().setVnote(vnote);
@@ -222,51 +222,51 @@ public class RestForWMSimpl {
 				PV[c].getParentVO().setStatus(VOStatus.NEW);
 //				PV[c].getParentVO().setVdef1("N");
 				PurchaseInBodyVO[] bodys = PV[c].getBodys();
-//				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //ÖØĞÂ×é½¨±íÌåVO
+//				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //é‡æ–°ç»„å»ºè¡¨ä½“VO
 				ArrayList<PurchaseInBodyVO> oi_new = new ArrayList<PurchaseInBodyVO>();
 				List<String> sqls = Lists.newArrayList();
 				for (int i=0;i<list.size();i++){
 					String pk_order_b = list.getJSONObject(i).getString("srcSystemId_b")==null?"null":list.getJSONObject(i).getString("srcSystemId_b");
 					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
 					if(replenishflag2==UFBoolean.TRUE&&nnum.compareTo(UFDouble.ZERO_DBL)>0)
-						throw new Exception("ÍË¿âÊıÁ¿±ØĞëÊÇ¸ºÊı£¬Çë¼ì²é!");
+						throw new Exception("é€€åº“æ•°é‡å¿…é¡»æ˜¯è´Ÿæ•°ï¼Œè¯·æ£€æŸ¥!");
 					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
 					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
-					String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");  
-					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"null":list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
+					String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");
+					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"null":list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
 					String Locationid = GetLocationid(cwarehouseid,clocationCode);
-//					String vskucode = list.getJSONObject(i).getString("vskucode")==null?"null":list.getJSONObject(i).getString("vskucode");  //ÌØÕ÷Âë
-//					String dproducedate = list.getJSONObject(i).getString("dproducedate")==null?"null":list.getJSONObject(i).getString("dproducedate");  //Éú²úÈÕÆÚ
-					String cstateid = list.getJSONObject(i).getString("cstateid");  //¿â´æ×´Ì¬ID
-					//String dproducedate = jsonAy.getString("dproducedate");  //Éú²úÈÕÆÚ
+//					String vskucode = list.getJSONObject(i).getString("vskucode")==null?"null":list.getJSONObject(i).getString("vskucode");  //ç‰¹å¾ç 
+//					String dproducedate = list.getJSONObject(i).getString("dproducedate")==null?"null":list.getJSONObject(i).getString("dproducedate");  //ç”Ÿäº§æ—¥æœŸ
+					String cstateid = list.getJSONObject(i).getString("cstateid");  //åº“å­˜çŠ¶æ€ID
+					//String dproducedate = jsonAy.getString("dproducedate");  //ç”Ÿäº§æ—¥æœŸ
 					for (int j=0;j<bodys.length;j++){
 						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
-						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //Ô´Í·µ¥¾İ±íÌåID
-						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İ±íÍ·ID
+						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //æºå¤´å•æ®è¡¨ä½“ID
+						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®è¡¨å¤´ID
 						if(cfirstbillhid==null||cfirstbillhid.equals(""))
 							cfirstbillhid = bodys[j].getCfirstbillhid();
-						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İºÅ
+						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®å·
 						if(cgddh==null||cgddh.equals(""))
 							cgddh = bodys[j].getVfirstbillcode();
-						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();	
-						String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//»õÎ»
-//						UFDate dproducedate_d = new UFDate(dproducedate);	
+						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
+						String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//è´§ä½
+//						UFDate dproducedate_d = new UFDate(dproducedate);
 						if(pk_order_b.equals(sourcebillbid)){
 //						if(pk_order_b.equals(sourcebillbid)){
 //							sqls.add("update po_order_b set naccumstorenum=(select sum(pb.nnum) from ic_purchasein_b pb where pb.csourcebillbid='"+pk_order_b+"' and pb.dr=0) where pk_order_b='"+pk_order_b+"'");
-							HashMap<String,Object> matinfo = queryMaterialBD(bodys[j].getCmaterialoid());//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
+							HashMap<String,Object> matinfo = queryMaterialBD(bodys[j].getCmaterialoid());//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
 							UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
-							HashMap<String,Object> poinfo = queryPo(pk_order_b);//²éÑ¯¿ÉÈë¿âÊıÁ¿
+							HashMap<String,Object> poinfo = queryPo(pk_order_b);//æŸ¥è¯¢å¯å…¥åº“æ•°é‡
 							UFDouble krkzsl = poinfo.get("krkzsl")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(poinfo.get("krkzsl")));
 							UFDouble krksl = poinfo.get("krksl")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(poinfo.get("krksl")));
-					
+
 							PurchaseInBodyVO newbody = (PurchaseInBodyVO)bodys[j].clone();
 							newbody.setCrowno(String.valueOf(i)+"0");
 							newbody.setNshouldnum(krkzsl);
 							newbody.setNnum(nnum);
 							newbody.setNshouldassistnum(krksl);
 							newbody.setNassistnum(nastnum);
-							newbody.setNqtunitnum(nastnum); 
+							newbody.setNqtunitnum(nastnum);
 							newbody.setVbatchcode(vbatchcode);
 							newbody.setCprojectid(cprojectid);
 							newbody.setVnotebody(".");
@@ -282,9 +282,9 @@ public class RestForWMSimpl {
 							newbody.setDproducedate(dmakedate_d);
 							newbody.setDvalidate(getDvalidate(newbody.getCmaterialoid(),PV[c].getParentVO().getPk_org(),dmakedate_d));
 							newbody.setCstateid(cstateid);
-							UFDouble hsje=bodys[j].getNorigtaxprice().multiply(nnum).setScale(2, UFDouble.ROUND_HALF_UP);  //º¬Ë°½ğ¶î
+							UFDouble hsje=bodys[j].getNorigtaxprice().multiply(nnum).setScale(2, UFDouble.ROUND_HALF_UP);  //å«ç¨é‡‘é¢
 //							UFDouble bhsje=bodys[j].getNorigprice().multiply(nnum).setScale(2, UFDouble.ROUND_HALF_UP);
-							UFDouble bhsje=hsje.div(UFDouble.ONE_DBL.add(bodys[j].getNtaxrate().multiply(0.01))).setScale(2, UFDouble.ROUND_HALF_UP);   //ÎŞË°½ğ¶î    Ëã·¨¸ÄÎª²ÆÎñµÄÄÇÖÖµ¹ÍÆ¼ÆËã·¨
+							UFDouble bhsje=hsje.div(UFDouble.ONE_DBL.add(bodys[j].getNtaxrate().multiply(0.01))).setScale(2, UFDouble.ROUND_HALF_UP);   //æ— ç¨é‡‘é¢    ç®—æ³•æ”¹ä¸ºè´¢åŠ¡çš„é‚£ç§å€’æ¨è®¡ç®—æ³•
 							newbody.setNorigtaxmny(hsje);
 							newbody.setNtaxmny(hsje);
 							newbody.setNcaltaxmny(bhsje);
@@ -299,30 +299,30 @@ public class RestForWMSimpl {
 					}
 				}
 				if(oi_new==null||oi_new.size()==0){
-					throw new Exception("´«ÊäµÄ²É¹º¶©µ¥±íÌå¼ÇÂ¼¶¼²»Âú×ãÈë¿âÌõ¼ş,Çë¼ì²é£¡");
+					throw new Exception("ä¼ è¾“çš„é‡‡è´­è®¢å•è¡¨ä½“è®°å½•éƒ½ä¸æ»¡è¶³å…¥åº“æ¡ä»¶,è¯·æ£€æŸ¥ï¼");
 				}
 				PV[c].setChildrenVO(oi_new.toArray(new PurchaseInBodyVO[oi_new.size()]));
 				result = (PurchaseInVO[])pfaction.processAction("WRITE", "45", null, PV[c], null, null);
 				billcode = result[0].getParentVO().getVbillcode();
-				successMessage = "NC²É¹ºÈë¿âµ¥±£´æ";
+				successMessage = "NCé‡‡è´­å…¥åº“å•ä¿å­˜";
 				if(sighFlag.equals("Y")){
 					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
 					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 					pfaction.processAction("SIGN", "45", null, result[0], null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
+					successMessage = successMessage+"å¹¶ç­¾å­—";
 				}
-				successMessage = successMessage+"³É¹¦£¡";
+				successMessage = successMessage+"æˆåŠŸï¼";
 //				if(replenishflag2==UFBoolean.TRUE) {
-//					for(String value : sqls){  //»ØĞ´ÉÏÓÎ²É¹º¶©µ¥ÀÛ¼ÆÈë¿âÊıÁ¿
+//					for(String value : sqls){  //å›å†™ä¸Šæ¸¸é‡‡è´­è®¢å•ç´¯è®¡å…¥åº“æ•°é‡
 //						dao.executeUpdate(value);
 //					}
 //				}
-				
+
 			}
-			
+
 			returnJson.setResultBillcode(billcode);
 			returnJson.setReturnMessage(successMessage);
 			returnJson.setStatus("1");
@@ -333,80 +333,80 @@ public class RestForWMSimpl {
 			if(result!=null&&result.length>0){
 				String[] PurchaseInPKS = new String[]{result[0].getPrimaryKey()};
 				IPurchaseInQueryAPI PQ = (IPurchaseInQueryAPI) NCLocator.getInstance().lookup(IPurchaseInQueryAPI.class);
-                
-				try {  //Èç¹ûÉú³ÉÁË²É¹ºÈë¿â£¬¶øÉóÅúÒì³££¬ÔòÉ¾³ı²É¹ºÈë¿âµ¥
+
+				try {  //å¦‚æœç”Ÿæˆäº†é‡‡è´­å…¥åº“ï¼Œè€Œå®¡æ‰¹å¼‚å¸¸ï¼Œåˆ™åˆ é™¤é‡‡è´­å…¥åº“å•
 					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					PurchaseInVO[] newPurchaseInVO= (PurchaseInVO[])PQ.queryVOByIDs(PurchaseInPKS);
 					pfaction.processAction("DELETE", "45", null, newPurchaseInVO[0], null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
 		}
 		return RestUtils.toJSONString(returnJson);
 	}
-	
+
 	public JSONString Generate4D(JSONObject jsonAy) {
 
-		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
 		returnvo returnJson = new returnvo();
 		MaterialOutVO[] result = null;
 		String successMessage = "";
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 		try {
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-//			String company_code = jsonAy.getString("company_code");  //×éÖ¯±àÂë
-//			String warehouseCode = jsonAy.getString("warehouseCode");  //²Ö¿â±àÂë
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+//			String company_code = jsonAy.getString("company_code");  //ç»„ç»‡ç¼–ç 
+//			String warehouseCode = jsonAy.getString("warehouseCode");  //ä»“åº“ç¼–ç 
 //			String sql_ckid = "select s.pk_stordoc from bd_stordoc s inner join org_orgs o on s.pk_org=o.pk_org where s.code='"+warehouseCode+"' and o.code='"+company_code+"'";
 //			String cwarehouseid = (String)dao.executeQuery(sql_ckid, new ColumnProcessor());
 //			if(cwarehouseid==null)
-//				throw new Exception("²Ö¿â±àÂë"+warehouseCode+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-			String vnote = jsonAy.getString("vnote");  //±¸×¢
-			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-//			String replenishflag = jsonAy.getString("replenishflag");  //ÊÇ·ñÍË¿â
+//				throw new Exception("ä»“åº“ç¼–ç "+warehouseCode+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+//			String replenishflag = jsonAy.getString("replenishflag");  //æ˜¯å¦é€€åº“
 //			UFBoolean replenishflag2 = UFBoolean.FALSE;
 //			if(replenishflag!=null&&replenishflag.equals("Y"))
 //				replenishflag2 = UFBoolean.TRUE;
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			UFDate dmakedate_d = dmakedate_t.getDate();	
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-			JSONArray newMateriallist = jsonAy.getJSONArray("newMateriallist");  //»ñÈ¡±íÌå¼ÇÂ¼
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			JSONArray newMateriallist = jsonAy.getJSONArray("newMateriallist");  //è·å–è¡¨ä½“è®°å½•
 			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-			
-			String cpickmid = jsonAy.getString("cpickmid");  //±¸ÁÏ¼Æ»®±íÍ·ID
+
+			String cpickmid = jsonAy.getString("cpickmid");  //å¤‡æ–™è®¡åˆ’è¡¨å¤´ID
 			String hid = queryOne("select h.cpickmid from mm_pickm h where h.cpickmid='"+cpickmid+"' and h.dr=0");
 			if (hid==null){
-				throw new Exception("´«ÊäµÄ±¸ÁÏ¼Æ»®ID("+cpickmid+")ÔÚNCÏµÍ³ÖĞ²»´æÔÚ»òÕßÒÑÉ¾³ı£¬Çë¼ì²é£¡");
+				throw new Exception("ä¼ è¾“çš„å¤‡æ–™è®¡åˆ’ID("+cpickmid+")åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤ï¼Œè¯·æ£€æŸ¥ï¼");
 			}
-			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
 			IPickmQueryService IQ = (IPickmQueryService) NCLocator.getInstance().lookup(IPickmQueryService.class);
 			AggPickmVO AP = IQ.querySingleBillByPk(cpickmid);
 			String ResultBillcode = "";
-			List<String> sqls = new ArrayList(); 
-			Map rows_map = new HashMap();  //ÓÃÀ´¼ÇÂ¼ÒÑÍÆ²ÄÁÏ³ö¿âµÄÎŞ±¸ÁÏÁìÁÏĞĞºÅ
+			List<String> sqls = new ArrayList();
+			Map rows_map = new HashMap();  //ç”¨æ¥è®°å½•å·²æ¨ææ–™å‡ºåº“çš„æ— å¤‡æ–™é¢†æ–™è¡Œå·
 			if(newMateriallist!=null&&newMateriallist.size()>0) {
 				String maxno = queryOne("select to_char(max(to_number(b.vrowno))) vrowno from mm_pickm_b b where b.cpickmid='"+hid+"' and b.dr=0");
 				insertNewMaterial(cwarehouseid,cpickmid,newMateriallist,dmakedate_d,maxno,rows_map);
 			}
 //			PickmItemVO[] apis = (PickmItemVO[])AP.getChildrenVO();
 //			PickmItemVO[] apis_new = new PickmItemVO[list.size()];
-			
+
 //			for (int r=0;r<list.size();r++){
 //				String cpickm_bid = list.getJSONObject(r).getString("cpickm_bid")==null?"null":list.getJSONObject(r).getString("cpickm_bid");
 //				UFDouble nplanoutnum = list.getJSONObject(r).getString("nplanoutnum")==null?null:new UFDouble(list.getJSONObject(r).getString("nplanoutnum"));
@@ -424,9 +424,9 @@ public class RestForWMSimpl {
 //			AP.setChildrenVO(apis_new)
 			AP = IQ.querySingleBillByPk(cpickmid);
 			AggPickmVO[] AP2 = {AP};
-			MaterialOutVO[] PVS = (MaterialOutVO[])PfUtilTools.runChangeDataAry("55A3", "4D", AP2);  //ÒòÎªÓĞ¿ÉÄÜ»á·Öµ¥£¬Êı¾İ×ª»»ºó±ä³É¶àÕÅ²ÄÁÏ³ö¿âµ¥£¬½á¹û¼¯Ó¦¸ÃÊÇÊı×é
-			Map pks_map = new HashMap();  //ÓÃÀ´¼ÇÂ¼ÒÑÍÆ²ÄÁÏ³ö¿âµÄÎŞ±¸ÁÏÁìÁÏĞĞ£¬±ÜÃâÒò·Öµ¥¶øÖØ¸´ÍÆµ¥
-			String srcvtrantypecode = queryOne("select h.vbusitype,h.vbusitypeid from mm_pickm h where h.cpickmid='"+cpickmid+"'");  //¶©µ¥½»Ò×ÀàĞÍ±àÂë
+			MaterialOutVO[] PVS = (MaterialOutVO[])PfUtilTools.runChangeDataAry("55A3", "4D", AP2);  //å› ä¸ºæœ‰å¯èƒ½ä¼šåˆ†å•ï¼Œæ•°æ®è½¬æ¢åå˜æˆå¤šå¼ ææ–™å‡ºåº“å•ï¼Œç»“æœé›†åº”è¯¥æ˜¯æ•°ç»„
+			Map pks_map = new HashMap();  //ç”¨æ¥è®°å½•å·²æ¨ææ–™å‡ºåº“çš„æ— å¤‡æ–™é¢†æ–™è¡Œï¼Œé¿å…å› åˆ†å•è€Œé‡å¤æ¨å•
+			String srcvtrantypecode = queryOne("select h.vbusitype,h.vbusitypeid from mm_pickm h where h.cpickmid='"+cpickmid+"'");  //è®¢å•äº¤æ˜“ç±»å‹ç¼–ç 
 			for(int i=0;i<PVS.length;i++){
 				MaterialOutVO PV = PVS[i];
 				PV.getParentVO().setCwarehouseid(cwarehouseid);
@@ -434,13 +434,13 @@ public class RestForWMSimpl {
 				PV.getParentVO().setVdef3("Y");
 				String vtrantypecode = getTransformCode(pk_group, "4D", srcvtrantypecode);
 				if(vtrantypecode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½¶ÔÓ¦µÄÉÏÏÂÓÎµ¥¾İÀàĞÍ¹ØÏµ");
+					throw new Exception("æ²¡æœ‰æ‰¾åˆ°å¯¹åº”çš„ä¸Šä¸‹æ¸¸å•æ®ç±»å‹å…³ç³»");
 				}
 				String ctrantypeid = getBillTypeId(pk_group, "4D", vtrantypecode);
 				PV.getParentVO().setCtrantypeid(ctrantypeid);
 				PV.getParentVO().setVtrantypecode(vtrantypecode);
-				
-				
+
+
 //				PV.getParentVO().setVdef2(wms_id);
 				List<MaterialOutBodyVO> bodylist = new ArrayList();
 				MaterialOutBodyVO[] bodys = (MaterialOutBodyVO[])PV.getChildrenVO();
@@ -458,7 +458,7 @@ public class RestForWMSimpl {
 							String Vnotebody = bodys[t].getVnotebody()==null?"null":bodys[t].getVnotebody();
 							String materialpk = bodys[t].getCmaterialoid();
 							if(cpickm_bid.equals(sourcebillbid)){
-//								bodys[t].setVnotebody("WMSÉú³É");
+//								bodys[t].setVnotebody("WMSç”Ÿæˆ");
 								bodys[t].setVbatchcode(vbatchcode);
 								bodys[t].setPk_batchcode(queryPK_batchcode(vbatchcode,materialpk));
 //								bodys[t].setDbizdate(new UFDate(System.currentTimeMillis()));
@@ -472,7 +472,7 @@ public class RestForWMSimpl {
 									if(ss.get("dvalidate")!=null)
 										bodys[t].setDvalidate(new UFDate(ss.get("dvalidate").toString()));
 								}
-								
+
 								MaterialOutBodyVO MBV=(MaterialOutBodyVO)bodys[t].clone();
 								MBV.setCrowno(String.valueOf(s)+"0");
 								MBV.setNassistnum(nplanoutastnum);
@@ -483,7 +483,7 @@ public class RestForWMSimpl {
 								bodylist.add(MBV);
 								break;
 							}
-							
+
 						}
 					}
 				}
@@ -500,6 +500,8 @@ public class RestForWMSimpl {
 							String Csourcebillbid = bodys[v].getCsourcebillbid();
 							String cbombid = queryOne("select b.cbombid from mm_pickm_b b where b.cpickm_bid='"+bodys[v].getCpickmbid()+"'");
 							String vrowno = queryOne("select b.vrowno from mm_pickm_b b where b.cpickm_bid='"+bodys[v].getCpickmbid()+"'");
+							if(vrowno.contains("."))
+								vrowno = vrowno.substring(0, vrowno.indexOf("."));
 							if(pk_material.endsWith(Cmaterialoid)&&cbombid==null) {
 								Object pk = pks_map.get(Csourcebillbid);
 								if(pk!=null)
@@ -520,7 +522,7 @@ public class RestForWMSimpl {
 									if(ss.get("dvalidate")!=null)
 										bodys[v].setDvalidate(new UFDate(ss.get("dvalidate").toString()));
 								}
-								
+
 								MaterialOutBodyVO MBV=(MaterialOutBodyVO)bodys[v].clone();
 								MBV.setCrowno(String.valueOf((list==null?0:list.size())+t+1)+"0");
 								MBV.setNassistnum(nplanoutastnum);
@@ -539,283 +541,285 @@ public class RestForWMSimpl {
 					continue;
 				//newMateriallist
 				PV.setChildrenVO(bodylist.toArray(new MaterialOutBodyVO[bodylist.size()]));
-				
+
 				result = (MaterialOutVO[])pfaction.processAction("WRITE", "4D", null, PV, null, null);
 				if(ResultBillcode.equals(""))
 					ResultBillcode = result[0].getParentVO().getVbillcode();
 				else
 					ResultBillcode = ResultBillcode+","+result[0].getParentVO().getVbillcode();
-				
-				successMessage = "NC²ÄÁÏ³ö¿âµ¥±£´æ";
+
+				successMessage = "NCææ–™å‡ºåº“å•ä¿å­˜";
 				if(sighFlag.equals("Y")){
 					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
 					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 					pfaction.processAction("SIGN", "4D", null, result[0], null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
+					successMessage = successMessage+"å¹¶ç­¾å­—";
 				}
-				successMessage = successMessage+"³É¹¦£¡";
+				successMessage = successMessage+"æˆåŠŸï¼";
 				for(int j=0;j<sqls.size();j++) {
 					dao.executeUpdate(sqls.get(j));
 				}
 			}
-			
+
 			returnJson.setResultBillcode(ResultBillcode);
 			returnJson.setReturnMessage(successMessage);
 			returnJson.setStatus("1");
 		} catch (Exception e) {
-			// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 			returnJson.setResultBillcode("");
 			returnJson.setStatus("0");
 			returnJson.setReturnMessage(e.toString());
 			if(result!=null&&result.length>0){
 				String pk = result[0].getParentVO().getCgeneralhid();
 				MaterialOutVO errorVo = IQ.querySingleBillByPk(MaterialOutVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "4D", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
 		}
 		return RestUtils.toJSONString(returnJson);
 	}
-	
+
 	public JSONString Generate4D_2(JSONObject jsonAy) {
-		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
 		returnvo returnJson = new returnvo();
 		String successMessage = "";
 		MaterialOutVO[] result = null;
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-			try {
-				String userID = jsonAy.getString("userID");  //ÖÆµ¥ÈËID
-				String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-				String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-				if(cuserid==null)
-					throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				String approver = jsonAy.getString("approverID");  //ÉóÅúÈËID
-				String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-				String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-				if(approverid==null)
-					throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-				String vnote = jsonAy.getString("vnote");  //±¸×¢
-				String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-
-				String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-				UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-				UFDate dmakedate_d = dmakedate_t.getDate();	
-				InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-				JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-				String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-				String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-				String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
-				String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
-				String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-				
-//				String ctrantypeCode = jsonAy.getString("ctrantypeCode");  //³öÈë¿âÀàĞÍ±àÂë
-				String cbizid = jsonAy.getString("cbizid");  //ÁìÁÏÔ±ID
-				String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //¿â¹ÜÔ±ID
-				String pk_dept = jsonAy.getString("pk_dept");  //ÁìÁÏ²¿ÃÅID
-				String pk_dept_v = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+pk_dept+"'");
-//				String sql_trantype = "select t.pk_billtypeid from bd_billtype t where t.pk_billtypecode='"+ctrantypeCode+"' and t.pk_group='"+groupId+"'";
-//				String ctrantypeid = (String) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql_trantype, new ColumnProcessor());
-				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-				InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-				MaterialOutVO mvo = new MaterialOutVO();
-				MaterialOutHeadVO hvo= new MaterialOutHeadVO();
-				
-				hvo.setCwarehouseid(cwarehouseid);
-				hvo.setCbizid(cbizid);
-				hvo.setCdptid(pk_dept);
-				hvo.setCdptvid(pk_dept_v);
-				hvo.setCdrawcalbodyoid(pk_org);
-				hvo.setCdrawcalbodyvid(pk_org_v);
-				hvo.setCdrawwarehouseid(cwarehouseid);
-				hvo.setCorpoid(pk_org);
-				hvo.setCorpvid(pk_org_v);
-				hvo.setCtrantypeid("0001A110000000002DYF");
-				hvo.setCwhsmanagerid(cwhsmanagerid);
-				hvo.setPk_org(pk_org);
-				hvo.setPk_org_v(pk_org_v);
-				hvo.setVtrantypecode("4D-01");
-				hvo.setVdef3("Y");
-				hvo.setVnote(vnote);
-				hvo.setStatus(VOStatus.NEW);
-				mvo.setParentVO(hvo);
-				MaterialOutBodyVO[] MBV = new MaterialOutBodyVO[list.size()];
-				for (int s=0;s<list.size();s++){
-					String cmaterialoid = list.getJSONObject(s).getString("cmaterialoid");  //ÎïÁÏid
-					String ccostobject = list.getJSONObject(s).getString("ccostobject");  //³É±¾¶ÔÏó£¨²ú³ÉÆ·ID£©
-//					String cprodprojectid = list.getJSONObject(s).getString("cprodprojectid");  //²ú³ÉÆ·¸¨ÖúÊôĞÔ-ÏîÄ¿
-//					String cprojectid = list.getJSONObject(s).getString("cprojectid");  //ÏîÄ¿
-//					String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //¹¤×÷ÖĞĞÄ
-					String vbatchcode = list.getJSONObject(s).getString("vbatchcode");  //Åú´ÎºÅ
-//					String clocationCode = list.getJSONObject(s).getString("clocationCode")==null?"null":list.getJSONObject(s).getString("clocationCode");  //»õÎ»±àÂë
-//					String clocationid = GetLocationid(cwarehouseid,clocationCode);
-					String vproductbatch = list.getJSONObject(s).getString("vproductbatch");  //Éú²ú¶©µ¥ºÅ
-					String cstateid = list.getJSONObject(s).getString("cstateid");  //¿â´æ×´Ì¬
-					String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //¹¤×÷ÖĞĞÄ
-//					String vskucode = list.getJSONObject(s).getString("vskucode")==null?"":list.getJSONObject(s).getString("vskucode");  //ÌØÕ÷Âë
-					UFDouble nnum = list.getJSONObject(s).getString("nnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nnum"));   //Ö÷ÊıÁ¿
-					UFDouble nassistnum = list.getJSONObject(s).getString("nassistnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nassistnum"));	//¸¨ÊıÁ¿	
-					String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
-							+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
-					HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
-					String castunitid = "";
-					String pk_source = "";
-					String zdw = "";
-					String measrate = "";
-					if(materialMap!=null&&materialMap.get("zdw")!=null){
-						castunitid=materialMap.get("pk_measdoc")==null?materialMap.get("zdw").toString():materialMap.get("pk_measdoc").toString();
-						pk_source=materialMap.get("pk_source").toString();
-						zdw=materialMap.get("zdw").toString();
-						measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
-					}else
-						throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-//					MaterialOutBodyVO bvo = MBV[s];
-					MaterialOutBodyVO bvo = new MaterialOutBodyVO();
-					bvo.setBassetcard(UFBoolean.FALSE);
-					bvo.setBbarcodeclose(UFBoolean.FALSE);
-					bvo.setBcseal(UFBoolean.FALSE);
-					bvo.setBonroadflag(UFBoolean.FALSE);
-					bvo.setBreworkflag(UFBoolean.FALSE);
-					bvo.setCastunitid(castunitid);
-					bvo.setCbodytranstypecode("4D-01");
-					bvo.setCbodywarehouseid(cwarehouseid);
-					bvo.setCmaterialoid(cmaterialoid);
-					bvo.setCmaterialvid(pk_source);
-					bvo.setCorpoid(pk_org);
-					bvo.setCorpvid(pk_org_v);
-					bvo.setCcostobject(ccostobject);
-					bvo.setCrowno(String.valueOf(s)+"0");
-					bvo.setCunitid(zdw);
-					bvo.setNassistnum(nassistnum);
-					bvo.setNnum(nnum);
-					bvo.setNshouldassistnum(nassistnum);
-					bvo.setNshouldnum(nnum);
-					bvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
-					bvo.setPk_group(pk_group);
-					bvo.setPk_org(pk_org);
-					bvo.setPk_org_v(pk_org_v);
-					bvo.setVbatchcode(vbatchcode);
-					bvo.setVchangerate(measrate);
-					bvo.setVproductbatch(vproductbatch);
-					bvo.setCstateid(cstateid);
-					bvo.setDproducedate(dmakedate_d);
-					bvo.setDbizdate(dmakedate_d);
-					bvo.setDvalidate(getDvalidate(cmaterialoid,pk_org,dmakedate_d));
-					MBV[s] = bvo;
-					MBV[s].setStatus(VOStatus.NEW);
-				}
-
-				mvo.setChildrenVO(MBV);
-				result = (MaterialOutVO[])pfaction.processAction("WRITE", "4D", null, mvo, null, null);
-				successMessage = "NC²ÄÁÏ³ö¿âµ¥±£´æ";
-				if(sighFlag.equals("Y")){
-					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					MaterialOutVO[] result2 = (MaterialOutVO[])pfaction.processAction("SIGN", "4D", null, result[0], null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
-				}
-				successMessage = successMessage+"³É¹¦£¡";
-				
-				returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
-				returnJson.setReturnMessage(successMessage);
-				returnJson.setStatus("1");	
-				
-			} catch (Exception e) {
-				// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-				returnJson.setResultBillcode("");
-				returnJson.setStatus("0");
-				returnJson.setReturnMessage(e.toString());
-				if(result!=null&&result.length>0){
-					String pk = result[0].getParentVO().getCgeneralhid();
-					MaterialOutVO errorVo = IQ.querySingleBillByPk(MaterialOutVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("DELETE", "4D", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-			}
-			return RestUtils.toJSONString(returnJson);
-	}
-	
-	public JSONString Rewrite4D(JSONObject jsonAy) {
- 		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
- 		returnvo returnJson = new returnvo();
- 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
-		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 		try {
- 			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+		try {
+			String userID = jsonAy.getString("userID");  //åˆ¶å•äººID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººID
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			UFDate dmakedate_d = dmakedate_t.getDate();	
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			
-			String vnote = jsonAy.getString("vnote");  //±¸×¢
- 			String successMessage = "";;
- 			
- 			String cgeneralhid = jsonAy.getString("cgeneralhid");  //²ÄÁÏ³ö¿âµ¥ID
- 			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
- 			MaterialOutVO MOVO_ori = IQ.querySingleBillByPk(MaterialOutVO.class, cgeneralhid);
- 			if(MOVO_ori==null)
- 				throw new Exception("²ÄÁÏ³ö¿âµ¥ID£º"+cgeneralhid+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
- 			String pk_group = MOVO_ori.getParentVO().getPk_group();
- 			
- 			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
- 			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
+			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
+			String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
+			String ccprkCode = jsonAy.getString("ccprkCode"); //å•æ®ç±»å‹ç¼–ç 
+
+			String ccprkId = getBillTypeId(pk_group, "4D", ccprkCode);
+//				String ctrantypeCode = jsonAy.getString("ctrantypeCode");  //å‡ºå…¥åº“ç±»å‹ç¼–ç 
+			String cbizid = jsonAy.getString("cbizid");  //é¢†æ–™å‘˜ID
+			String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //åº“ç®¡å‘˜ID
+			String pk_dept = jsonAy.getString("pk_dept");  //é¢†æ–™éƒ¨é—¨ID
+			String pk_dept_v = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+pk_dept+"'");
+//				String sql_trantype = "select t.pk_billtypeid from bd_billtype t where t.pk_billtypecode='"+ctrantypeCode+"' and t.pk_group='"+groupId+"'";
+//				String ctrantypeid = (String) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql_trantype, new ColumnProcessor());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+			MaterialOutVO mvo = new MaterialOutVO();
+			MaterialOutHeadVO hvo= new MaterialOutHeadVO();
+
+			hvo.setCwarehouseid(cwarehouseid);
+			hvo.setCbizid(cbizid);
+			hvo.setCdptid(pk_dept);
+			hvo.setCdptvid(pk_dept_v);
+			hvo.setCdrawcalbodyoid(pk_org);
+			hvo.setCdrawcalbodyvid(pk_org_v);
+			hvo.setCdrawwarehouseid(cwarehouseid);
+			hvo.setCorpoid(pk_org);
+			hvo.setCorpvid(pk_org_v);
+			hvo.setCtrantypeid(ccprkId);
+			hvo.setCwhsmanagerid(cwhsmanagerid);
+			hvo.setPk_org(pk_org);
+			hvo.setPk_org_v(pk_org_v);
+			hvo.setVtrantypecode("4D-01");
+			hvo.setVdef3("Y");
+			hvo.setVnote(vnote);
+			hvo.setStatus(VOStatus.NEW);
+			mvo.setParentVO(hvo);
+			MaterialOutBodyVO[] MBV = new MaterialOutBodyVO[list.size()];
+			for (int s=0;s<list.size();s++){
+				String cmaterialoid = list.getJSONObject(s).getString("cmaterialoid");  //ç‰©æ–™id
+				String ccostobject = list.getJSONObject(s).getString("ccostobject");  //æˆæœ¬å¯¹è±¡ï¼ˆäº§æˆå“IDï¼‰
+//					String cprodprojectid = list.getJSONObject(s).getString("cprodprojectid");  //äº§æˆå“è¾…åŠ©å±æ€§-é¡¹ç›®
+//					String cprojectid = list.getJSONObject(s).getString("cprojectid");  //é¡¹ç›®
+//					String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //å·¥ä½œä¸­å¿ƒ
+				String vbatchcode = list.getJSONObject(s).getString("vbatchcode");  //æ‰¹æ¬¡å·
+//					String clocationCode = list.getJSONObject(s).getString("clocationCode")==null?"null":list.getJSONObject(s).getString("clocationCode");  //è´§ä½ç¼–ç 
+//					String clocationid = GetLocationid(cwarehouseid,clocationCode);
+				String vproductbatch = list.getJSONObject(s).getString("vproductbatch");  //ç”Ÿäº§è®¢å•å·
+				String cstateid = list.getJSONObject(s).getString("cstateid");  //åº“å­˜çŠ¶æ€
+				String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //å·¥ä½œä¸­å¿ƒ
+//					String vskucode = list.getJSONObject(s).getString("vskucode")==null?"":list.getJSONObject(s).getString("vskucode");  //ç‰¹å¾ç 
+				UFDouble nnum = list.getJSONObject(s).getString("nnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nnum"));   //ä¸»æ•°é‡
+				UFDouble nassistnum = list.getJSONObject(s).getString("nassistnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nassistnum"));	//è¾…æ•°é‡
+				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
+						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
+				HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
+				String castunitid = "";
+				String pk_source = "";
+				String zdw = "";
+				String measrate = "";
+				if(materialMap!=null&&materialMap.get("zdw")!=null){
+					castunitid=materialMap.get("pk_measdoc")==null?materialMap.get("zdw").toString():materialMap.get("pk_measdoc").toString();
+					pk_source=materialMap.get("pk_source").toString();
+					zdw=materialMap.get("zdw").toString();
+					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
+				}else
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+//					MaterialOutBodyVO bvo = MBV[s];
+				MaterialOutBodyVO bvo = new MaterialOutBodyVO();
+				bvo.setBassetcard(UFBoolean.FALSE);
+				bvo.setBbarcodeclose(UFBoolean.FALSE);
+				bvo.setBcseal(UFBoolean.FALSE);
+				bvo.setBonroadflag(UFBoolean.FALSE);
+				bvo.setBreworkflag(UFBoolean.FALSE);
+				bvo.setCastunitid(castunitid);
+				bvo.setCbodytranstypecode("4D-01");
+				bvo.setCbodywarehouseid(cwarehouseid);
+				bvo.setCmaterialoid(cmaterialoid);
+				bvo.setCmaterialvid(pk_source);
+				bvo.setCorpoid(pk_org);
+				bvo.setCorpvid(pk_org_v);
+				bvo.setCcostobject(ccostobject);
+				bvo.setCrowno(String.valueOf(s)+"0");
+				bvo.setCunitid(zdw);
+				bvo.setNassistnum(nassistnum);
+				bvo.setNnum(nnum);
+				bvo.setNshouldassistnum(nassistnum);
+				bvo.setNshouldnum(nnum);
+				bvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
+				bvo.setPk_group(pk_group);
+				bvo.setPk_org(pk_org);
+				bvo.setPk_org_v(pk_org_v);
+				bvo.setVbatchcode(vbatchcode);
+				bvo.setVchangerate(measrate);
+				bvo.setVproductbatch(vproductbatch);
+				bvo.setCstateid(cstateid);
+				bvo.setDproducedate(dmakedate_d);
+				bvo.setDbizdate(dmakedate_d);
+				bvo.setDvalidate(getDvalidate(cmaterialoid,pk_org,dmakedate_d));
+				MBV[s] = bvo;
+				MBV[s].setStatus(VOStatus.NEW);
+			}
+
+			mvo.setChildrenVO(MBV);
+			result = (MaterialOutVO[])pfaction.processAction("WRITE", "4D", null, mvo, null, null);
+			successMessage = "NCææ–™å‡ºåº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")){
+				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				MaterialOutVO[] result2 = (MaterialOutVO[])pfaction.processAction("SIGN", "4D", null, result[0], null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+
+			returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(result!=null&&result.length>0){
+				String pk = result[0].getParentVO().getCgeneralhid();
+				MaterialOutVO errorVo = IQ.querySingleBillByPk(MaterialOutVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "4D", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Rewrite4D(JSONObject jsonAy) {
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
+		returnvo returnJson = new returnvo();
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+		try {
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String successMessage = "";;
+
+			String cgeneralhid = jsonAy.getString("cgeneralhid");  //ææ–™å‡ºåº“å•ID
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			MaterialOutVO MOVO_ori = IQ.querySingleBillByPk(MaterialOutVO.class, cgeneralhid);
+			if(MOVO_ori==null)
+				throw new Exception("ææ–™å‡ºåº“å•IDï¼š"+cgeneralhid+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String pk_group = MOVO_ori.getParentVO().getPk_group();
+
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 // 			InvocationInfoProxy.getInstance().setBizDateTime(audittime.getMillis());
- 			int Fbillflag = MOVO_ori.getParentVO().getFbillflag();
- 			if(Fbillflag!=2) {
- 				MaterialOutVO[] tempvo = (MaterialOutVO[])pfaction.processAction("CANCELSIGN", "45", null, MOVO_ori, null, null);
- 				MOVO_ori = tempvo[0];
- 			}
- 			MaterialOutVO[] GIVO_ori2 = {MOVO_ori};
- 			MaterialOutVO GIVO = (MaterialOutVO)MOVO_ori.clone();
- 			MaterialOutVO[] GIVO2 = {GIVO};
- 			MaterialOutBodyVO[] bvos = GIVO.getBodys();
- 			int rowcount = bvos.length;
- 			MaterialOutHeadVO hvo = GIVO.getHead();
- 			hvo.setVdef3("Y");
- 			hvo.setVnote(vnote);
- 			hvo.setStatus(VOStatus.UPDATED);
- 			JSONArray list = jsonAy.getJSONArray("list");
- 			List<MaterialOutBodyVO> bodylist = new ArrayList();
- 			Map<String,String> rows_map = new HashMap<String,String>();  //ÓÃÀ´¼ÇÂ¼ÊÇ·ñ¶à´Î´«Í¬¸öID,ÒÔ±ãÅĞ¶ÏÊÇĞŞ¸Ä»¹ÊÇÔöĞĞ
- 			for(int i=0;i<list.size();i++){
- 				String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");  //±íÌåÖ÷¼ü 				
- 				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));  //Èë¿âÖ÷ÊıÁ¿
- 				UFDouble nassistnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));  //Èë¿âÊıÁ¿
- 				String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
- 				String cstateid = list.getJSONObject(i).getString("cstateid")==null?"":list.getJSONObject(i).getString("cstateid");
- 				String cworkcenterid = list.getJSONObject(i).getString("cworkcenterid");
- 				for(int j=0;j<bvos.length;j++){
- 					String cgeneralbid2 = bvos[j].getCgeneralbid();
- 					if(cgeneralbid.equals(cgeneralbid2)){
-// 						HashMap<String,Object> matinfo = queryMaterialBD(bvos[j].getCmaterialoid());//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
-// 						UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight"))); 
+			int Fbillflag = MOVO_ori.getParentVO().getFbillflag();
+			if(Fbillflag!=2) {
+				MaterialOutVO[] tempvo = (MaterialOutVO[])pfaction.processAction("CANCELSIGN", "45", null, MOVO_ori, null, null);
+				MOVO_ori = tempvo[0];
+			}
+			MaterialOutVO[] GIVO_ori2 = {MOVO_ori};
+			MaterialOutVO GIVO = (MaterialOutVO)MOVO_ori.clone();
+			MaterialOutVO[] GIVO2 = {GIVO};
+			MaterialOutBodyVO[] bvos = GIVO.getBodys();
+			int rowcount = bvos.length;
+			MaterialOutHeadVO hvo = GIVO.getHead();
+			hvo.setVdef3("Y");
+			hvo.setVnote(vnote);
+			hvo.setStatus(VOStatus.UPDATED);
+			JSONArray list = jsonAy.getJSONArray("list");
+			List<MaterialOutBodyVO> bodylist = new ArrayList();
+			Map<String,String> rows_map = new HashMap<String,String>();  //ç”¨æ¥è®°å½•æ˜¯å¦å¤šæ¬¡ä¼ åŒä¸ªID,ä»¥ä¾¿åˆ¤æ–­æ˜¯ä¿®æ”¹è¿˜æ˜¯å¢è¡Œ
+			for(int i=0;i<list.size();i++){
+				String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");  //è¡¨ä½“ä¸»é”®
+				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));  //å…¥åº“ä¸»æ•°é‡
+				UFDouble nassistnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));  //å…¥åº“æ•°é‡
+				String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
+				String cstateid = list.getJSONObject(i).getString("cstateid")==null?"":list.getJSONObject(i).getString("cstateid");
+				String cworkcenterid = list.getJSONObject(i).getString("cworkcenterid");
+				for(int j=0;j<bvos.length;j++){
+					String cgeneralbid2 = bvos[j].getCgeneralbid();
+					if(cgeneralbid.equals(cgeneralbid2)){
+// 						HashMap<String,Object> matinfo = queryMaterialBD(bvos[j].getCmaterialoid());//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
+// 						UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
 // 						MaterialOutBodyVO tabvo = (MaterialOutBodyVO)bvos[j].clone();
 // 						tabvo.setStatus(VOStatus.NEW);
 // 						bvos[j].setStatus(VOStatus.DELETED);
@@ -833,54 +837,54 @@ public class RestForWMSimpl {
 // 						if(!unitweight.equals(UFDouble.ZERO_DBL))
 // 							tabvo.setNweight(unitweight.multiply(nnum).setScale(4, UFDouble.ROUND_HALF_UP));
 // 						bodylist.add(tabvo);
- 						
- 						MaterialOutBodyVO tabvo = null;
- 						String hadsendflag = (String)rows_map.get(cgeneralbid);
- 						if(hadsendflag!=null) {
- 							for(int k=0;k<bvos.length;k++) {
- 								String hadsendflag2 = (String)rows_map.get(bvos[k].getCgeneralbid());
- 								if(hadsendflag2!=null)
-										continue;
- 								if(bvos[j].getCmaterialoid().equals(bvos[k].getCmaterialoid())) {
- 									tabvo = bvos[k];
- 		 							tabvo.setStatus(VOStatus.UPDATED);
- 		 							rows_map.put(bvos[k].getCgeneralbid(), bvos[k].getCgeneralbid());
- 		 							break;
- 								}
- 							}
- 							if(tabvo==null) {
- 								tabvo = (MaterialOutBodyVO)bvos[j].clone();
-		 						tabvo.setStatus(VOStatus.NEW);
-		 						rowcount = rowcount+1;
-		 						tabvo.setCrowno(String.valueOf(rowcount)+"0");
-		 						int l = 20-String.valueOf(rowcount).length()-3;
-		 						IdGenerator idGenerator = new SequenceGenerator();
-		 						tabvo.setCgeneralbid(idGenerator.generate());
 
- 							}
- 							
- 						}else {
- 							tabvo = bvos[j];
- 							tabvo.setStatus(VOStatus.UPDATED);
- 							rows_map.put(cgeneralbid, cgeneralbid);
- 						}
- 						HashMap<String,Object> matinfo = queryMaterialBD(tabvo.getCmaterialoid());//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
- 						UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight"))); 						
- 						tabvo.setNnum(nnum);
- 						tabvo.setNassistnum(nassistnum);
- 						tabvo.setVbatchcode(vbatchcode);
- 						tabvo.setPk_batchcode(queryPK_batchcode(vbatchcode,bvos[j].getCmaterialoid()));
- 						tabvo.setCstateid(cstateid);
- 						tabvo.setCworkcenterid(cworkcenterid);
- 						tabvo.setDbizdate(dmakedate_d);
- 						tabvo.setDproducedate(dmakedate_d);
- 						tabvo.setDvalidate(getDvalidate(tabvo.getCmaterialoid(),hvo.getPk_org(),dmakedate_d));
- 						if(!unitweight.equals(UFDouble.ZERO_DBL))
- 							tabvo.setNweight(unitweight.multiply(nnum).setScale(4, UFDouble.ROUND_HALF_UP));
- 						bodylist.add(tabvo);
- 					}
- 				}
- 			}
+						MaterialOutBodyVO tabvo = null;
+						String hadsendflag = (String)rows_map.get(cgeneralbid);
+						if(hadsendflag!=null) {
+							for(int k=0;k<bvos.length;k++) {
+								String hadsendflag2 = (String)rows_map.get(bvos[k].getCgeneralbid());
+								if(hadsendflag2!=null)
+									continue;
+								if(bvos[j].getCmaterialoid().equals(bvos[k].getCmaterialoid())) {
+									tabvo = bvos[k];
+									tabvo.setStatus(VOStatus.UPDATED);
+									rows_map.put(bvos[k].getCgeneralbid(), bvos[k].getCgeneralbid());
+									break;
+								}
+							}
+							if(tabvo==null) {
+								tabvo = (MaterialOutBodyVO)bvos[j].clone();
+								tabvo.setStatus(VOStatus.NEW);
+								rowcount = rowcount+1;
+								tabvo.setCrowno(String.valueOf(rowcount)+"0");
+								int l = 20-String.valueOf(rowcount).length()-3;
+								IdGenerator idGenerator = new SequenceGenerator();
+								tabvo.setCgeneralbid(idGenerator.generate());
+
+							}
+
+						}else {
+							tabvo = bvos[j];
+							tabvo.setStatus(VOStatus.UPDATED);
+							rows_map.put(cgeneralbid, cgeneralbid);
+						}
+						HashMap<String,Object> matinfo = queryMaterialBD(tabvo.getCmaterialoid());//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
+						UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
+						tabvo.setNnum(nnum);
+						tabvo.setNassistnum(nassistnum);
+						tabvo.setVbatchcode(vbatchcode);
+						tabvo.setPk_batchcode(queryPK_batchcode(vbatchcode,bvos[j].getCmaterialoid()));
+						tabvo.setCstateid(cstateid);
+						tabvo.setCworkcenterid(cworkcenterid);
+						tabvo.setDbizdate(dmakedate_d);
+						tabvo.setDproducedate(dmakedate_d);
+						tabvo.setDvalidate(getDvalidate(tabvo.getCmaterialoid(),hvo.getPk_org(),dmakedate_d));
+						if(!unitweight.equals(UFDouble.ZERO_DBL))
+							tabvo.setNweight(unitweight.multiply(nnum).setScale(4, UFDouble.ROUND_HALF_UP));
+						bodylist.add(tabvo);
+					}
+				}
+			}
 // 			for(int s=0;s<bvos.length;s++){
 // 				String cgeneralbid = bvos[s].getCgeneralbid();
 // 				String crowno = bvos[s].getCrowno();
@@ -889,37 +893,37 @@ public class RestForWMSimpl {
 // 					bodylist.add(bvos[s]);
 // 				}
 // 			}
- 			GIVO.setChildrenVO(bodylist.toArray(new MaterialOutBodyVO[bodylist.size()]));
- 			
-// 			FinProdInVO[] result = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, GIVO, null, null);
- 			IMaterialOutMaintain MQ = (IMaterialOutMaintain) NCLocator.getInstance().lookup(IMaterialOutMaintain.class);
- 			MaterialOutVO[] result = MQ.update(GIVO2,GIVO_ori2);
- 			successMessage = "NC²ÄÁÏ³ö¿âµ¥±£´æ";
- 			if(sighFlag.equals("Y")){
- 				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
-				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
- 				pfaction.processAction("SIGN", "45", null, result[0], null, null);
- 				successMessage = successMessage+"²¢Ç©×Ö";
- 			}
- 			successMessage = successMessage+"³É¹¦£¡";
- 			dao.executeUpdate("update ic_material_h h set h.dbilldate='"+dmakedate+"' where h.cgeneralhid='"+cgeneralhid+"'");
+			GIVO.setChildrenVO(bodylist.toArray(new MaterialOutBodyVO[bodylist.size()]));
 
- 			returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
- 			returnJson.setReturnMessage(successMessage);
- 			returnJson.setStatus("1");
- 			
- 		} catch (Exception e) {
- 			// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 		}
- 		return RestUtils.toJSONString(returnJson);
- 	}
-	
+// 			FinProdInVO[] result = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, GIVO, null, null);
+			IMaterialOutMaintain MQ = (IMaterialOutMaintain) NCLocator.getInstance().lookup(IMaterialOutMaintain.class);
+			MaterialOutVO[] result = MQ.update(GIVO2,GIVO_ori2);
+			successMessage = "NCææ–™å‡ºåº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")){
+				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				pfaction.processAction("SIGN", "45", null, result[0], null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+			dao.executeUpdate("update ic_material_h h set h.dbilldate='"+dmakedate+"' where h.cgeneralhid='"+cgeneralhid+"'");
+
+			returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
 	public void insertNewMaterial(String cwarehouseid,String cpickmid,JSONArray newMateriallist,UFDate dmakedate_d,String maxno,Map rows_map) throws Exception{
 		IPickmBusinessService IPS = (IPickmBusinessService) NCLocator.getInstance().lookup(IPickmBusinessService.class);
 		List<PickmItemVO> bodylist = new ArrayList();
@@ -954,8 +958,8 @@ public class RestForWMSimpl {
 				zdw=materialMap.get("zdw").toString();
 				measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
 			}else
-				throw new Exception("ÎïÁÏÖ÷¼ü"+pk_material+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-			
+				throw new Exception("ç‰©æ–™ä¸»é”®"+pk_material+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+
 			pv.setStatus(VOStatus.NEW);
 			pv.setBautobuilt(UFBoolean.FALSE);
 			pv.setBcandeliver(UFBoolean.TRUE);
@@ -998,6 +1002,8 @@ public class RestForWMSimpl {
 			pv.setPk_org(pk_org);
 			pv.setPk_org_v(pk_org_v);
 			pv.setVbchangerate(measrate);
+			if(maxno.contains("."))
+				maxno = maxno.substring(0, maxno.indexOf("."));
 			String rowno = String.valueOf(Integer.valueOf(maxno)+(i+1)*10);
 			pv.setVrowno(rowno);
 			rows_map.put(rowno, rowno);
@@ -1010,61 +1016,61 @@ public class RestForWMSimpl {
 			dao.executeUpdate(sqls.get(j));
 		}
 	}
-	
+
 	public HashMap getmaterialInfo(String wl) throws DAOException {
 		String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
 				+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+wl+"'";
 		HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
 		return materialMap;
 	}
-	
+
 	public JSONString Generate4I(JSONObject jsonAy) {
 		returnvo returnJson = new returnvo();
 		GeneralOutVO[] result = null;
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 		try {
 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 			GeneralOutVO GOVO = new GeneralOutVO();
 			GeneralOutHeadVO hvo = new GeneralOutHeadVO();
-			String cwarehouseid = jsonAy.getString("cwarehouseid");  //Èë¿â²Ö¿âid
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //å…¥åº“ä»“åº“id
 
-			String vnote = jsonAy.getString("vnote");  //±íÍ·±¸×¢
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //¿â¹ÜÔ±id
-			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			UFDate dmakedate_d = dmakedate_t.getDate();	
+			String vnote = jsonAy.getString("vnote");  //è¡¨å¤´å¤‡æ³¨
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //åº“ç®¡å‘˜id
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
 			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-		    String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
 			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
 			String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-			
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String pk_dept = jsonAy.getString("pk_dept");  //²¿ÃÅID
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String pk_dept = jsonAy.getString("pk_dept");  //éƒ¨é—¨ID
 			String pk_dept_v = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+pk_dept+"'");
 			JSONArray list = jsonAy.getJSONArray("list");
 			GeneralOutBodyVO[] bvos = new GeneralOutBodyVO[list.size()];
-			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
 			String successMessage = "";
-			String ctrantypeid = jsonAy.getString("ctrantypeid");  //³öÈë¿âÀàĞÍID
+			String ctrantypeid = jsonAy.getString("ctrantypeid");  //å‡ºå…¥åº“ç±»å‹ID
 			if(ctrantypeid==null||ctrantypeid.equals(""))
 				ctrantypeid = "0001A110000000002DYI";
 			String vtrantypecode = queryOne("select t.pk_billtypecode from bd_billtype t where t.pk_billtypeid='"+ctrantypeid+"'");
-			
+
 			hvo.setCorpoid(pk_org);
 			hvo.setCorpvid(pk_org_v);
 			hvo.setCtrantypeid(ctrantypeid);
@@ -1082,18 +1088,18 @@ public class RestForWMSimpl {
 			hvo.setCdptvid(pk_dept_v);
 			hvo.setStatus(VOStatus.NEW);
 			for(int i=0;i<list.size();i++){
-				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ÎïÁÏid
-//				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
-				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //Ö÷ÊıÁ¿
-				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//¸¨ÊıÁ¿			
-				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //Åú´ÎºÅ
+				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ç‰©æ–™id
+//				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
+				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //ä¸»æ•°é‡
+				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//è¾…æ•°é‡
+				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //æ‰¹æ¬¡å·
 				String cstateid = list.getJSONObject(i).getString("cstateid");
-				String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "" : list.getJSONObject(i).getString("clocationid");//»õÎ»
-//				String vskucode = list.getJSONObject(i).getString("vskucode")==null?"null":list.getJSONObject(i).getString("vskucode");  //ÌØÕ÷Âë
-//				String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");  //ÏîÄ¿id
+				String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "" : list.getJSONObject(i).getString("clocationid");//è´§ä½
+//				String vskucode = list.getJSONObject(i).getString("vskucode")==null?"null":list.getJSONObject(i).getString("vskucode");  //ç‰¹å¾ç 
+//				String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");  //é¡¹ç›®id
 //				String Locationid = GetLocationid(cwarehouseid,clocationCode);
 				String sql_mv = "select v.pk_source from bd_material_v v where v.pk_material='"+cmaterialoid+"'";
-				
+
 				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
 						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
 				HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
@@ -1107,9 +1113,9 @@ public class RestForWMSimpl {
 					zdw=materialMap.get("zdw").toString();
 					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
 				}else
-					throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-				
-				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+
+				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
 				UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
 				bvos[i] = new GeneralOutBodyVO();
 				bvos[i].setBbarcodeclose(UFBoolean.FALSE);
@@ -1151,16 +1157,16 @@ public class RestForWMSimpl {
 			GOVO.setParentVO(hvo);
 			GOVO.setChildrenVO(bvos);
 			result=(GeneralOutVO[])pfaction.processAction("WRITE", "4I", null, GOVO,null, null);
-			successMessage = "NCÆäËü³ö¿âµ¥±£´æ";
+			successMessage = "NCå…¶å®ƒå‡ºåº“å•ä¿å­˜";
 			if(sighFlag.equals("Y")){
-				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
 				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 				pfaction.processAction("SIGN", "4I", null, result[0], null, null);
-				successMessage = successMessage+"²¢Ç©×Ö";
+				successMessage = successMessage+"å¹¶ç­¾å­—";
 			}
-			successMessage = successMessage+"³É¹¦£¡";
+			successMessage = successMessage+"æˆåŠŸï¼";
 			returnJson.setStatus("1");
 			returnJson.setResultBillcode(GOVO.getParentVO().getAttributeValue("vbillcode").toString());
 			returnJson.setReturnMessage(successMessage);
@@ -1171,39 +1177,39 @@ public class RestForWMSimpl {
 			if(result!=null&&result.length>0){
 				String pk = result[0].getParentVO().getCgeneralhid();
 				GeneralOutVO errorVo = IQ.querySingleBillByPk(GeneralOutVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "4I", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
 		}
 		return RestUtils.toJSONString(returnJson);
 	}
-	
-    public JSONString Generate4A(JSONObject jsonAy) {
-		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
+
+	public JSONString Generate4A(JSONObject jsonAy) {
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
 		returnvo returnJson = new returnvo();
 		GeneralInVO [] result = null;
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 		try {
 			GeneralInVO GIVO = new GeneralInVO();
 			GeneralInHeadVO hvo = new GeneralInHeadVO();
-			String cwarehouseid = jsonAy.getString("cwarehouseid");  //Èë¿â²Ö¿âid
-//			String userCode = jsonAy.getString("userCode");  //ÓÃ»§±àÂë
-			String vnote = jsonAy.getString("vnote");  //±íÍ·±¸×¢
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //¿â¹ÜÔ±id
-			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //å…¥åº“ä»“åº“id
+//			String userCode = jsonAy.getString("userCode");  //ç”¨æˆ·ç¼–ç 
+			String vnote = jsonAy.getString("vnote");  //è¡¨å¤´å¤‡æ³¨
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //åº“ç®¡å‘˜id
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
 			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
 //			String sql_userid = "select u.cuserid from sm_user u where u.user_code='"+userCode+"'";
 			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-		    String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
 			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
@@ -1212,25 +1218,25 @@ public class RestForWMSimpl {
 			JSONArray list = jsonAy.getJSONArray("list");
 			GeneralInBodyVO[] bvos = new GeneralInBodyVO[list.size()];
 			String successMessage = "";
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String pk_dept = jsonAy.getString("pk_dept");  //²¿ÃÅID
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String pk_dept = jsonAy.getString("pk_dept");  //éƒ¨é—¨ID
 			String pk_dept_v = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+pk_dept+"'");
-			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-			String ctrantypeid = jsonAy.getString("ctrantypeid");  //³öÈë¿âÀàĞÍID
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+			String ctrantypeid = jsonAy.getString("ctrantypeid");  //å‡ºå…¥åº“ç±»å‹ID
 			if(ctrantypeid==null||ctrantypeid.equals(""))
 				ctrantypeid = "0001A110000000002DXV";
 			String vtrantypecode = queryOne("select t.pk_billtypecode from bd_billtype t where t.pk_billtypeid='"+ctrantypeid+"'");
-			
+
 			hvo.setCorpoid(pk_org);
 			hvo.setCorpvid(pk_org_v);
 			hvo.setCtrantypeid(ctrantypeid);
@@ -1247,20 +1253,20 @@ public class RestForWMSimpl {
 			hvo.setCdptvid(pk_dept_v);
 			hvo.setStatus(VOStatus.NEW);
 			for(int i=0;i<list.size();i++){
-				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ÎïÁÏid
-				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
-				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //Ö÷ÊıÁ¿
-				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//¸¨ÊıÁ¿			
-				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //Åú´ÎºÅ
-				String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");  //ÏîÄ¿id
-				String prodate = list.getJSONObject(i).getString("prodate")==null?(new UFDate(System.currentTimeMillis())).toString():list.getJSONObject(i).getString("prodate");  //Éú²úÈÕÆÚ
+				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ç‰©æ–™id
+				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
+				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //ä¸»æ•°é‡
+				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//è¾…æ•°é‡
+				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //æ‰¹æ¬¡å·
+				String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");  //é¡¹ç›®id
+				String prodate = list.getJSONObject(i).getString("prodate")==null?(new UFDate(System.currentTimeMillis())).toString():list.getJSONObject(i).getString("prodate");  //ç”Ÿäº§æ—¥æœŸ
 				String cstateid = list.getJSONObject(i).getString("cstateid");
 				UFDate prodate_d = new UFDate(prodate);
 				String Locationid = GetLocationid(cwarehouseid,clocationCode);
-				String clocationid = list.getJSONObject(i).getString("clocationid") == null? "" : list.getJSONObject(i).getString("clocationid");//»õÎ»
-				
+				String clocationid = list.getJSONObject(i).getString("clocationid") == null? "" : list.getJSONObject(i).getString("clocationid");//è´§ä½
+
 				String sql_mv = "select v.pk_source from bd_material_v v where v.pk_material='"+cmaterialoid+"'";
-				
+
 				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
 						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
 				HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
@@ -1274,9 +1280,9 @@ public class RestForWMSimpl {
 					zdw=materialMap.get("zdw").toString();
 					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
 				}else
-					throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-				
-				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+
+				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
 				UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
 				bvos[i] = new GeneralInBodyVO();
 				bvos[i].setBbarcodeclose(UFBoolean.FALSE);
@@ -1320,16 +1326,16 @@ public class RestForWMSimpl {
 			GIVO.setParentVO(hvo);
 			GIVO.setChildrenVO(bvos);
 			result=(GeneralInVO[])pfaction.processAction("WRITE", "4A", null, GIVO,null, null);
-			successMessage = "NCÆäËüÈë¿âµ¥±£´æ";
+			successMessage = "NCå…¶å®ƒå…¥åº“å•ä¿å­˜";
 			if(sighFlag.equals("Y")){
-				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
 				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 				pfaction.processAction("SIGN", "4A", null, result[0], null, null);
-				successMessage = successMessage+"²¢Ç©×Ö";
+				successMessage = successMessage+"å¹¶ç­¾å­—";
 			}
-			successMessage = successMessage+"³É¹¦£¡";
+			successMessage = successMessage+"æˆåŠŸï¼";
 			returnJson.setStatus("1");
 			returnJson.setResultBillcode(GIVO.getParentVO().getAttributeValue("vbillcode").toString());
 			returnJson.setReturnMessage(successMessage);
@@ -1340,76 +1346,76 @@ public class RestForWMSimpl {
 			if(result!=null&&result.length>0){
 				String pk = result[0].getParentVO().getCgeneralhid();
 				GeneralInVO errorVo = IQ.querySingleBillByPk(GeneralInVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "4A", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
 		}
 		return RestUtils.toJSONString(returnJson);
-    	
+
 //		returnvo returnJson = new returnvo();
 //		GeneralOutVO[] result = null;
 //		String successMessage = "";
-//		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+//		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 //		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 //		try {
-//			String userCode = jsonAy.getString("userCode");  //ÓÃ»§±àÂë
+//			String userCode = jsonAy.getString("userCode");  //ç”¨æˆ·ç¼–ç 
 //			String sql_userid = "select u.cuserid from sm_user u inner join bd_psndoc p on u.pk_psndoc=p.pk_psndoc where p.code='"+userCode+"'";
 //
 //			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 //			if(cuserid==null)
-//				throw new Exception("ÖÆµ¥ÈË±àÂë"+userCode+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-//			String approver = jsonAy.getString("approver");  //ÉóÅúÈË±àÂë
+//				throw new Exception("åˆ¶å•äººç¼–ç "+userCode+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+//			String approver = jsonAy.getString("approver");  //å®¡æ‰¹äººç¼–ç 
 //			String sql_approver = "select u.cuserid from sm_user u inner join bd_psndoc p on u.pk_psndoc=p.pk_psndoc where p.code='"+approver+"'";
 //			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 //			if(approverid==null)
-//				throw new Exception("ÉóÅúÈË±àÂë"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
+//				throw new Exception("å®¡æ‰¹äººç¼–ç "+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
 //
-//			String vnote = jsonAy.getString("vnote");  //±¸×¢
-//			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-////			String replenishflag = jsonAy.getString("replenishflag");  //ÊÇ·ñÍË¿â
+//			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+//			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+////			String replenishflag = jsonAy.getString("replenishflag");  //æ˜¯å¦é€€åº“
 ////			UFBoolean replenishflag2 = UFBoolean.FALSE;
 ////			if(replenishflag!=null&&replenishflag.equals("Y"))
 ////				replenishflag2 = UFBoolean.TRUE;
-//			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-//			UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
-//			UFDate dmakedate_d = new UFDate(dmakedate);	
+//			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+//			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+//			UFDate dmakedate_d = new UFDate(dmakedate);
 //			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-//			String cspecialhid = jsonAy.getString("cspecialhid");  //×ª¿âµ¥±íÍ·ID
-//			String deptid = jsonAy.getString("deptid");  //²¿ÃÅID
+//			String cspecialhid = jsonAy.getString("cspecialhid");  //è½¬åº“å•è¡¨å¤´ID
+//			String deptid = jsonAy.getString("deptid");  //éƒ¨é—¨ID
 //			String deptvid = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+deptid+"'");
-//			JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
+//			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
 //			String sql_group = "select h.pk_group from ic_whstrans_h h where h.cspecialhid='"+cspecialhid+"'";
 //			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-//			
-////			String wms_id = jsonAy.getString("wms_id");  //WMSÏµÍ³µ¥¾İÖ÷¼ü
-//			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-//			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-//			
+//
+////			String wms_id = jsonAy.getString("wms_id");  //WMSç³»ç»Ÿå•æ®ä¸»é”®
+//			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+//			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+//
 //			WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, cspecialhid);
 //			String ResultBillcode = "";
 //			if (AP==null){
-//				throw new Exception("´«ÊäµÄ×ª¿âµ¥IDÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
+//				throw new Exception("ä¼ è¾“çš„è½¬åº“å•IDåœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
 //			}
-//			
-//			GeneralInVO PV = (GeneralInVO)PfUtilTools.runChangeData("4K", "4A", AP);  
+//
+//			GeneralInVO PV = (GeneralInVO)PfUtilTools.runChangeData("4K", "4A", AP);
 //
 //			PV.getParentVO().setCdptid(deptid);
 //			PV.getParentVO().setCdptvid(deptvid);
 //			PV.getParentVO().setVnote(vnote);
 //			PV.getParentVO().setStatus(VOStatus.NEW);
-//			
+//
 //			GeneralInBodyVO[] bodys = (GeneralInBodyVO[])PV.getChildrenVO();
 //			ArrayList<GeneralInBodyVO> oi_new = new ArrayList<GeneralInBodyVO>();
 ////			MaterialOutBodyVO[] MBV = new MaterialOutBodyVO[bodys.length];
 //			for (int s=0;s<list.size();s++){
 //				String cspecialbid = list.getJSONObject(s).getString("cspecialbid")==null?"null":list.getJSONObject(s).getString("cspecialbid");
-//				UFDouble nnum = new UFDouble(list.getJSONObject(s).getString("nnum"));   //Ö÷ÊıÁ¿
-//				UFDouble nastnum = new UFDouble(list.getJSONObject(s).getString("nastnum"));	//¸¨ÊıÁ¿
+//				UFDouble nnum = new UFDouble(list.getJSONObject(s).getString("nnum"));   //ä¸»æ•°é‡
+//				UFDouble nastnum = new UFDouble(list.getJSONObject(s).getString("nastnum"));	//è¾…æ•°é‡
 //				for (int t=0;t<bodys.length;t++){
 //					String sourcebillbid = bodys[t].getCsourcebillbid();
 //					if(sourcebillbid.equals(cspecialbid)) {
@@ -1419,43 +1425,43 @@ public class RestForWMSimpl {
 //						newbody.setStatus(VOStatus.NEW);
 //						oi_new.add(newbody);
 //					}
-//					
+//
 //				}
 //			}
 //			PV.setChildrenVO(oi_new.toArray(new GeneralInBodyVO[oi_new.size()]));
-//			
+//
 //			result = (GeneralOutVO[])pfaction.processAction("WRITE", "4A", null, PV, null, null);
-//			ResultBillcode = ResultBillcode+"¡¾"+result[0].getParentVO().getVbillcode()+"¡¿";
-//			successMessage = "NCÆäËûÈë¿âµ¥±£´æ";
+//			ResultBillcode = ResultBillcode+"ã€"+result[0].getParentVO().getVbillcode()+"ã€‘";
+//			successMessage = "NCå…¶ä»–å…¥åº“å•ä¿å­˜";
 //			if(sighFlag.equals("Y")){
 //				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-//				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-//				UFDateTime taudittime_t = new UFDateTime(taudittime);			
+//				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+//				UFDateTime taudittime_t = new UFDateTime(taudittime);
 //				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-//				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+//				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 //				pfaction.processAction("SIGN", "4A", null, result[0], null, null);
-//				successMessage = successMessage+"²¢Ç©×Ö";
+//				successMessage = successMessage+"å¹¶ç­¾å­—";
 //			}
-//			successMessage = successMessage+"³É¹¦£¡";
-//			
+//			successMessage = successMessage+"æˆåŠŸï¼";
+//
 //			returnJson.setResultBillcode(ResultBillcode);
 //			returnJson.setReturnMessage(successMessage);
 //			returnJson.setStatus("1");
 //		} catch (Exception e) {
-//			// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+//			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 //			returnJson.setResultBillcode("");
 //			returnJson.setStatus("0");
 //			returnJson.setReturnMessage(e.toString());
 //		}
 //		return RestUtils.toJSONString(returnJson);
 	}
-	
+
 	private HashMap queryDvalidate(String code,String materialPK) throws Exception{
 		String sql ="select s.dvalidate,s.dproducedate from scm_batchcode s where s.vbatchcode='"+code+"' and s.cmaterialoid='"+materialPK+"' and s.dr=0";
 		HashMap result = (HashMap) dao.executeQuery(sql,new MapProcessor());
 		return result;
 	}
-	
+
 	private String queryPK_batchcode(String code,String materialPK) throws Exception{
 		String sql ="select s.pk_batchcode from scm_batchcode s where s.vbatchcode='"+code+"' and s.cmaterialoid='"+materialPK+"' and s.dr=0";
 		HashMap id = (HashMap) dao.executeQuery(sql,new MapProcessor());
@@ -1464,119 +1470,121 @@ public class RestForWMSimpl {
 		else
 			return null;
 	}
-	
+
 	private String InfoQuery(String code,String type) throws Exception{
-		  String sql = null;
-		  HashMap id = null;
-		  switch(type){
-		  case "arriveorderCode":
-			  sql = "select vbillcode from po_arriveorder where pk_arriveorder='"+code+"' and dr=0";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("vbillcode")!=null)
+		String sql = null;
+		HashMap id = null;
+		switch(type){
+			case "arriveorderCode":
+				sql = "select vbillcode from po_arriveorder where pk_arriveorder='"+code+"' and dr=0";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("vbillcode")!=null)
 					return id.get("vbillcode").toString();
 				else
-					return ""; 
-		  case "cwfl":
-			  sql = "select def1 from bd_marbasclass where pk_marbasclass=(select pk_marbasclass from bd_material where pk_material='"+code+"')";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("def1")!=null)
+					return "";
+			case "cwfl":
+				sql = "select def1 from bd_marbasclass where pk_marbasclass=(select pk_marbasclass from bd_material where pk_material='"+code+"')";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("def1")!=null)
 					return id.get("def1").toString();
 				else
 					return "";
-		  case "flbm":
-			  sql = "select substr(c.code,0,2) code from bd_material m inner join bd_marbasclass c on m.pk_marbasclass=c.pk_marbasclass where m.pk_material='"+code+"'";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("code")!=null)
+			case "flbm":
+				sql = "select substr(c.code,0,2) code from bd_material m inner join bd_marbasclass c on m.pk_marbasclass=c.pk_marbasclass where m.pk_material='"+code+"'";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("code")!=null)
 					return id.get("code").toString();
 				else
 					return "";
-		  case "pk_plandept_v":
-			  sql = "select max(v.pk_vid) pk_vid from org_dept_v v where v.pk_dept='"+code+"'";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("pk_vid")!=null)
+			case "pk_plandept_v":
+				sql = "select max(v.pk_vid) pk_vid from org_dept_v v where v.pk_dept='"+code+"'";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("pk_vid")!=null)
 					return id.get("pk_vid").toString();
 				else
 					return "";
-		  case "sfww":
-			  sql = "select s.martype from bd_materialstock s where s.pk_material||s.pk_org='"+code+"'";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("martype")!=null)
+			case "sfww":
+				sql = "select s.martype from bd_materialstock s where s.pk_material||s.pk_org='"+code+"'";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("martype")!=null)
 					return id.get("martype").toString();
 				else
 					return "";
-		  case "shdz":
-			  sql = "select address from bd_custaddress_v_a where pk_address = '"+code+"'";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("address")!=null)
+			case "shdz":
+				sql = "select address from bd_custaddress_v_a where pk_address = '"+code+"'";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("address")!=null)
 					return id.get("address").toString();
 				else
 					return "";
-		  case "cfirstbillhid":
-			  sql = "select ph.pk_order from po_order ph inner join po_order_b pb on ph.pk_order=pb.pk_order where pb.pk_order_b='"+code+"'";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("pk_order")!=null)
+			case "cfirstbillhid":
+				sql = "select ph.pk_order from po_order ph inner join po_order_b pb on ph.pk_order=pb.pk_order where pb.pk_order_b='"+code+"'";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("pk_order")!=null)
 					return id.get("pk_order").toString();
 				else
 					return "";
-		  case "cgddh":
-			  sql = "select ph.vbillcode from po_order ph inner join po_order_b pb on ph.pk_order=pb.pk_order where pb.pk_order_b='"+code+"'";
-			  id = (HashMap) dao.executeQuery(sql,new MapProcessor());
-			  if (id!=null&&id.get("vbillcode")!=null)
+			case "cgddh":
+				sql = "select ph.vbillcode from po_order ph inner join po_order_b pb on ph.pk_order=pb.pk_order where pb.pk_order_b='"+code+"'";
+				id = (HashMap) dao.executeQuery(sql,new MapProcessor());
+				if (id!=null&&id.get("vbillcode")!=null)
 					return id.get("vbillcode").toString();
 				else
 					return "";
-		  } 
-		  return null;
-	  }
-	
+		}
+		return null;
+	}
+
 	private String GetLocationid(String Cwarehouseid,String clocationCode) throws Exception{
+		if(clocationCode==null||clocationCode.equals("null"))
+			return "";
 		String sql_location = "select r.pk_rack from bd_rack r where r.pk_stordoc='"+Cwarehouseid+"' and r.code='"+clocationCode+"'";
 		String clocationid = (String) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql_location, new ColumnProcessor());
 		if(clocationid==null){
 			if(clocationCode!=null&&!clocationCode.equals(""))
-				throw new Exception("»õÎ»"+clocationCode+"²»ÊôÓÚÈë¿âµ¥µÄÈë¿â²Ö¿â£¬Çë¼ì²é»õÎ»£¡");
+				throw new Exception("è´§ä½"+clocationCode+"ä¸å±äºå…¥åº“å•çš„å…¥åº“ä»“åº“ï¼Œè¯·æ£€æŸ¥è´§ä½ï¼");
 			else
 				return "";
 		}
 		else
 			return clocationid;
 	}
-	
+
 	private HashMap<String,Object> queryMaterialBD(String pk_material) throws DAOException{
 		String sql = "select unitweight from bd_material m where m.pk_material='"+pk_material+"'";
-		HashMap<String,Object> result = (HashMap) dao.executeQuery(sql,new MapProcessor());  
+		HashMap<String,Object> result = (HashMap) dao.executeQuery(sql,new MapProcessor());
 		return result;
 	}
-	
+
 	private HashMap<String,Object> queryPo(String pk_order_b) throws DAOException{
 		String sql = "select nvl(b.nnum,0)-nvl(b.naccumstorenum,0) krkzsl,(nvl(b.nnum,0)-nvl(b.naccumstorenum,0))*(b.nastnum/b.nnum) krksl "
 				+ "from po_order_b b where b.dr=0 and b.pk_order_b='"+pk_order_b+"'";
-		HashMap<String,Object> result = (HashMap) dao.executeQuery(sql,new MapProcessor());  
+		HashMap<String,Object> result = (HashMap) dao.executeQuery(sql,new MapProcessor());
 		return result;
 	}
-	
+
 	private HashMap<String,Object> queryArr(String pk_arriveorder_b) throws DAOException{
 		String sql = "select nvl(b.nnum,0)-nvl(b.naccumstorenum,0) krkzsl,(nvl(b.nnum,0)-nvl(b.naccumstorenum,0))*(b.nastnum/b.nnum) krksl from po_arriveorder_b b where b.pk_arriveorder_b='"+pk_arriveorder_b+"' and h.dr=0 and b.dr=0";
-		HashMap<String,Object> result = (HashMap) dao.executeQuery(sql,new MapProcessor());  
+		HashMap<String,Object> result = (HashMap) dao.executeQuery(sql,new MapProcessor());
 		return result;
 	}
-	
+
 	private UFDate getDvalidate(String wl,String pk_org,UFDate Dproducedate) throws Exception {
 		Object bzq = dao.executeQuery("select (case when s.qualityunit=0 then s.qualitynum*365 else (case when s.qualityunit=1 then s.qualitynum*30 else s.qualitynum end) end) qualitynum from bd_materialstock s where s.pk_material='"+wl+"' and s.pk_org='"+pk_org+"' and s.dr=0",new ColumnProcessor());
 		if(bzq==null) {
 			String qualitymanflag = (String)dao.executeQuery("select s.qualitymanflag from bd_materialstock s where s.pk_material='"+wl+"' and s.pk_org='"+pk_org+"' and s.dr=0",new ColumnProcessor());
 			if(qualitymanflag!=null&&qualitymanflag.equals("Y")) {
 				String wlbm = (String)dao.executeQuery("select m.code from bd_material m where m.pk_material='"+wl+"'",new ColumnProcessor());
-				throw new Exception("ÎïÁÏ"+wlbm+"¹´Ñ¡ÁË±£ÖÊÆÚ¹ÜÀíÈ´Ã»ÓĞÎ¬»¤±£ÖÊÆÚ£¬Çë¼ì²é£¡");
+				throw new Exception("ç‰©æ–™"+wlbm+"å‹¾é€‰äº†ä¿è´¨æœŸç®¡ç†å´æ²¡æœ‰ç»´æŠ¤ä¿è´¨æœŸï¼Œè¯·æ£€æŸ¥ï¼");
 			}
 			return new UFDate("9999-12-31");
 		}
-		else 
+		else
 			return Dproducedate.getDateAfter(Integer.valueOf(bzq.toString()));
 	}
-	
+
 	/**
-	 * ²éÑ¯Ò»¸ö×Ö·û
+	 * æŸ¥è¯¢ä¸€ä¸ªå­—ç¬¦
 	 * zhoush
 	 * 2023-5-6
 	 */
@@ -1586,1262 +1594,1268 @@ public class RestForWMSimpl {
 		try {
 			pk = (List<String>) dao.executeQuery(sql, new ColumnListProcessor());
 		} catch (DAOException e) {
-			ExceptionUtils.wrappBusinessException("´íÎó:" + e.getMessage());
+			ExceptionUtils.wrappBusinessException("é”™è¯¯:" + e.getMessage());
 		}
 		if(pk==null||pk.size()==0){
-		return null;
+			return null;
 		}
 		return pk.get(0);
 	}
-	
+
 	private String getusingstatus(String code) {
 		return queryOne("select s.pk_usingstatus from fa_usingstatus s where s.status_code='"+code+"'");
 	}
-	
-	//µ¥¾İ½Ó¿Ú¶¨Òå£¬²éÑ¯¶ÔÓ¦ÀàĞÍµ¥¾İ×ª»»ºóµÄ±àÂë
+
+	//å•æ®æ¥å£å®šä¹‰ï¼ŒæŸ¥è¯¢å¯¹åº”ç±»å‹å•æ®è½¬æ¢åçš„ç¼–ç 
 	private String getTransformCode(String pk_group,String DestBillType,String SrcTransType) {
 		String sql = "SELECT DEST_TRANSTYPE FROM pub_billitfdef WHERE DEST_BILLTYPE  = '" + DestBillType + "' AND SRC_TRANSTYPE  = '" + SrcTransType + "' AND  PK_GROUP = '" + pk_group + "'";
 		return queryOne(sql);
 	}
-	
-	//²éÑ¯µ¥¾İ½»Ò×ÀàĞÍID
+
+	//æŸ¥è¯¢å•æ®äº¤æ˜“ç±»å‹ID
 	private String getBillTypeId(String pk_group,String parentBilltype,String BillTypeCode) {
-		String sql = "select pk_billtypeid from bd_billtype where (istransaction = 'Y' and pk_group = '" + pk_group + "' and nvl ( islock, 'N' ) = 'N' and parentbilltype = '" + parentBilltype + "' AND PK_BILLTYPECODE = '" + BillTypeCode + "')";	
+		String sql = "select pk_billtypeid from bd_billtype where (istransaction = 'Y' and pk_group = '" + pk_group + "' and nvl ( islock, 'N' ) = 'N' and parentbilltype = '" + parentBilltype + "' AND PK_BILLTYPECODE = '" + BillTypeCode + "')";
 		return queryOne(sql);
 	}
-	
-	 public JSONString Generate46(JSONObject jsonAy) {
-			returnvo returnJson = new returnvo();                
-			String successMessage = "";
-			FinProdInVO[] FP_origin = null;
-			AggWrVO[] WV = null;
-			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
-			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-			IPwrMaintainService IPM = (IPwrMaintainService) NCLocator.getInstance().lookup(IPwrMaintainService.class);
-			IPMOBusinessService PmoService = (IPMOBusinessService) NCLocator.getInstance().lookup(IPMOBusinessService.class);
-			IWrBusinessService WrService = (IWrBusinessService) NCLocator.getInstance().lookup(IWrBusinessService.class);
-			try {
-				String wmsID = jsonAy.getString("wmsID");  
-				if(wmsID!=null) {
-					String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
-					String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
-					if(wmsflag!=null) {
-						returnJson.setResultBillcode(wmsflag);
-						returnJson.setReturnMessage("NC²ú³ÉÆ·Èë¿âµ¥±£´æ²¢Ç©×Ö³É¹¦£¡");
-						returnJson.setStatus("1");
-						return RestUtils.toJSONString(returnJson);
-//						throw new Exception("IDÎª"+wmsID+"µÄWMSµ¥¾İÒÑÔÚNCÉú³É¹ı²ú³ÉÆ·Èë¿âµ¥£¬ÖØ¸´ÍÆµ¥£¬Çë¼ì²é£¡");
-					}
-						
-				}
-				String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-				String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-				String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-				if(cuserid==null)
-					throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-				String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-				String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-				if(approverid==null)
-					throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
 
-				String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-//				String replenishflag = jsonAy.getString("replenishflag");  //ÊÇ·ñÍË¿â
-//				UFBoolean replenishflag2 = UFBoolean.FALSE;
-//				if(replenishflag!=null&&replenishflag.equals("Y"))
-//					replenishflag2 = UFBoolean.TRUE;
-				String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-				UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
-				UFDate dmakedate_d = dmakedate_t.getDate();	
-				InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-				String cpmohid = jsonAy.getString("cpmohid");  //Éú²ú¶©µ¥ID
-				String scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //Éú²ú¶©µ¥ÀàĞÍ
-				String scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //¶©µ¥½»Ò×ÀàĞÍ±àÂë
-				
-				String cmoid = jsonAy.getString("cmoid");  //Éú²ú¶©µ¥±íÌåID
-				String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-				String sql_group = "select p.pk_group from mm_pmo p where p.cpmohid='"+cpmohid+"'";
-				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-				InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-				
-				String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//Éú²ú±¨¸æÀàĞÍcode
-				if(scbgCode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½Á÷³ÌÉú²ú¶©µ¥ÀàĞÍ£º" + scddlxbm + "¶ÔÓ¦µÄÉú²ú±¨¸æÀàĞÍ¹ØÏµ");
+	public JSONString Generate46(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		String successMessage = "";
+		FinProdInVO[] FP_origin = null;
+		AggWrVO[] WV = null;
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+		IPwrMaintainService IPM = (IPwrMaintainService) NCLocator.getInstance().lookup(IPwrMaintainService.class);
+		IPMOBusinessService PmoService = (IPMOBusinessService) NCLocator.getInstance().lookup(IPMOBusinessService.class);
+		IWrBusinessService WrService = (IWrBusinessService) NCLocator.getInstance().lookup(IWrBusinessService.class);
+		try {
+			String wmsID = jsonAy.getString("wmsID");
+			if(wmsID!=null) {
+				String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
+				String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
+				if(wmsflag!=null) {
+					returnJson.setResultBillcode(wmsflag);
+					returnJson.setReturnMessage("NCäº§æˆå“å…¥åº“å•ä¿å­˜å¹¶ç­¾å­—æˆåŠŸï¼");
+					returnJson.setStatus("1");
+					return RestUtils.toJSONString(returnJson);
+//						throw new Exception("IDä¸º"+wmsID+"çš„WMSå•æ®å·²åœ¨NCç”Ÿæˆè¿‡äº§æˆå“å…¥åº“å•ï¼Œé‡å¤æ¨å•ï¼Œè¯·æ£€æŸ¥ï¼");
 				}
-				String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//¿â´æ²ú³ÉÆ·Èë¿âÀàĞÍcode
-				if(ccprkCode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½Éú²ú±¨¸æÀàĞÍ£º" + scbgCode + "¶ÔÓ¦µÄ¿â´æ²ú³ÉÆ·Èë¿âµ¥ÀàĞÍ¹ØÏµ");
-				}
-				
-				UFDouble nbwrastnum = jsonAy.getString("nbwrastnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrastnum"));  //Íê¹¤ÊıÁ¿
-				UFDouble nbwrnum = jsonAy.getString("nbwrnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrnum"));  //Íê¹¤Ö÷ÊıÁ¿
-				String batchcode = jsonAy.getString("batchcode");  //Èë¿âÅú´ÎºÅ
-				String vbatchcodenote = jsonAy.getString("vbatchcodenote");  //Åú´Î±¸×¢
-				String cstateid = jsonAy.getString("cstateid");
-				String[] pks = {cpmohid};
-				AbstractBill[] PV=(AbstractBill[])IQ.queryAbstractBillsByPks(PMOAggVO.class, pks);
-				PMOAggVO pmovo = (PMOAggVO)PV[0];
-				PMOAggVO[] pmos = {pmovo};
-				
-				if (PV==null||PV.length==0){
-					throw new Exception("´«ÊäµÄÉú²ú¶©µ¥IDÔÚÏµÍ³²»´æÔÚ»òÕßÒÑÉ¾³ı!");
-				}
-				PMOItemVO[] piv = (PMOItemVO[])PV[0].getChildrenVO();
-				List<PMOItemVO> bodylist = new ArrayList();
-				String fitemstatus = String.valueOf(piv[0].getAttributeValue("fitemstatus"));
-				if(fitemstatus.equals("4")) {
-					PmoService.put(pmos);
-				}
-				for(int w=0;w<piv.length;w++) {
-					String bid = piv[w].getCmoid();
-					if(bid.equals(cmoid)) {
-//						if(fitemstatus.equals("2")){
-//							throw new Exception("´«ÊäµÄÉú²ú¶©µ¥ÒÑÍê¹¤£¬²»ÄÜÖØ¸´Éú³ÉÍê¹¤±¨¸æ£¡");
-//						}else if(fitemstatus.equals("3")){
-//							throw new Exception("´«ÊäµÄÉú²ú¶©ÒÑ¹Ø±Õ£¡");
-//						}else if(!fitemstatus.equals("1")){
-//							throw new Exception("´«ÊäµÄÉú²ú¶©×´Ì¬ÎªÎ´Í¶·Å£¡");
-//						}
-						bodylist.add(piv[w]);
-						break;
-					}
-				}
-				PV[0].setChildrenVO(bodylist.toArray(new PMOItemVO[bodylist.size()]));
-				WV = (AggWrVO[])PfUtilTools.runChangeDataAry("55A2","55A4", PV);
-				WV[0].getParentVO().setFbillstatus(1);
-				WrItemVO[] WI = WV[0].getChildrenVO();
-				WI[0].setVbrowno("10");
-				WI[0].setNbwrastnum(nbwrastnum);
-				WI[0].setNbwrnum(nbwrnum);
-				WI[0].setNbcheckastnum(nbwrastnum);
-				WI[0].setNbchecknum(nbwrnum);
-				WI[0].setVbinbatchcode(batchcode);
-				WI[0].setFbproducttype(1);
-				WI[0].setTbstarttime(new UFDateTime(System.currentTimeMillis()));
-				WI[0].setTbendtime(new UFDateTime(System.currentTimeMillis()+1));
-				WV = IPM.insert(WV);
-				AggWrVO[] WV2 = (AggWrVO[])pfaction.processAction("APPROVE", "55A4", null, WV[0], null, null);
-//				FinProdInVO[] pv = (FinProdInVO[])pfaction.processAction("55A4", "46", null, WV2[0], null, null);
-				FinProdInVO pv = (FinProdInVO)PfUtilTools.runChangeData("55A4", "46", WV2[0]);
-				pv.getHead().setStatus(VOStatus.NEW);
-				pv.getHead().setCwarehouseid(cwarehouseid);
-				pv.getHead().setCprowarehouseid(cwarehouseid);
-				pv.getHead().setVdef1(wmsID);
-				FinProdInBodyVO pbv = pv.getBody(0);
-				
-				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
-				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //µ±Éú²ú¶©µ¥ÀàĞÍÎª·µ¹¤Á÷³ÌÉú²ú¶©µ¥Ê±£¬²ú³ÉÆ·Èë¿âÒ²ÉèÎª¸ÃÀàĞÍ
-					pbv.setBreworkflag(UFBoolean.TRUE);
-				}
-				pv.getHead().setVtrantypecode(ccprkCode);
-				pv.getHead().setCtrantypeid(ccprkId);
 
-				pbv.setNassistnum(pbv.getNshouldassistnum());
-				pbv.setNnum(pbv.getNshouldnum());
-				pbv.setVbatchcode(batchcode);
-				pbv.setPk_batchcode(queryPK_batchcode(batchcode,pbv.getCmaterialoid()));
-				pbv.setVbatchcodenote(vbatchcodenote);
-				pbv.setCstateid(cstateid);
-//				pbv.setCstateid("1001A210000000070OZ8");  //¿â´æ×´Ì¬
-				pbv.setCbodywarehouseid(cwarehouseid);
-				pbv.setDproducedate(dmakedate_d);
-				pbv.setDbizdate(dmakedate_d);
-				pbv.setDvalidate(getDvalidate(pbv.getCmaterialoid(),pv.getHead().getPk_org(),dmakedate_d));
-				pbv.setStatus(VOStatus.NEW);
-				FP_origin = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, pv, null, null); 
-				dao.executeUpdate("update mm_mo m set m.ninnum=(select sum(fb.nnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' "
-						+ "and fb.dr=0),m.ninastnum=(select sum(fb.nassistnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' and fb.dr=0) where m.cmoid='"+cmoid+"'");
-				successMessage = "NC²ú³ÉÆ·Èë¿âµ¥±£´æ";
-				if(sighFlag.equals("Y")) {
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					pfaction.processAction("SIGN", "46", null, FP_origin[0],null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
-				}
-				successMessage = successMessage+"³É¹¦£¡";
-				rewriteWr(WV[0].getParentVO().getPk_wr());
-				returnJson.setResultBillcode(FP_origin[0].getParentVO().getVbillcode());
-				returnJson.setReturnMessage(successMessage);
-				returnJson.setStatus("1");
-			} catch (Exception e) {
-				// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-				returnJson.setResultBillcode("");
-				returnJson.setStatus("0");
-				returnJson.setReturnMessage(e.toString());
-				if(FP_origin!=null&&FP_origin.length>0){
-					String pk = FP_origin[0].getParentVO().getCgeneralhid();
-					FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("DELETE", "46", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-				if(WV!=null&&WV.length>0){
-					String pk = WV[0].getParentVO().getPk_wr();
-					AggWrVO errorVo = IQ.querySingleBillByPk(AggWrVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("UNAPPROVE", "55A4", null, errorVo, null, null);
-						pfaction.processAction("DELETE", "55A4", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
 			}
-			return RestUtils.toJSONString(returnJson);
-	 }
-	 
-	 public JSONString Generate46v2(JSONObject jsonAy) {
-			returnvo returnJson = new returnvo();                
-			String successMessage = "";
-			FinProdInVO[] FP_origin = null;
-			AggWrVO[] WV = null;
-			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
-			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-			IPwrMaintainService IPM = (IPwrMaintainService) NCLocator.getInstance().lookup(IPwrMaintainService.class);
-			IPMOBusinessService PmoService = (IPMOBusinessService) NCLocator.getInstance().lookup(IPMOBusinessService.class);
-			IWrBusinessService WrService = (IWrBusinessService) NCLocator.getInstance().lookup(IWrBusinessService.class);
-			try {
-				String wmsID = jsonAy.getString("wmsID");  
-				if(wmsID!=null) {
-					String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
-					String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
-					if(wmsflag!=null) {
-						returnJson.setResultBillcode(wmsflag);
-						returnJson.setReturnMessage("NC²ú³ÉÆ·Èë¿âµ¥±£´æ²¢Ç©×Ö³É¹¦£¡");
-						returnJson.setStatus("1");
-						return RestUtils.toJSONString(returnJson);
-//						throw new Exception("IDÎª"+wmsID+"µÄWMSµ¥¾İÒÑÔÚNCÉú³É¹ı²ú³ÉÆ·Èë¿âµ¥£¬ÖØ¸´ÍÆµ¥£¬Çë¼ì²é£¡");
-					}
-						
-				}
-				String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-				String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-				String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-				if(cuserid==null)
-					throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-				String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-				String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-				if(approverid==null)
-					throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-
-				String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-				String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-				UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
-				UFDate dmakedate_d = dmakedate_t.getDate();	
-				InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-
-//				String cmoid = jsonAy.getString("cmoid");  //Éú²ú¶©µ¥±íÌåID
-				String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-                                if(cwarehouseid==null)
-					throw new Exception("²Ö¿âID²»ÄÜÎª¿Õ£¡");
-				String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-                                if(pk_group==null)
-					throw new Exception("²Ö¿âIDÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-				InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-						
-				JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-				ArrayList<String> pks_list = new ArrayList<String>();
-				Map pks_map = new HashMap();
-				String scddlx="";
-				String scddlxbm = "";
-				for(int i=0;i<list.size();i++) {  
-					String pk = list.getJSONObject(i).getString("cpmohid")==null?"":list.getJSONObject(i).getString("cpmohid");
-					String scddid = queryOne("select * from mm_pmo p where p.cpmohid='"+pk+"' and p.dr=0");
-					if(scddid==null)
-						throw new Exception("Éú²ú¶©µ¥ID£º"+pk+"ÔÚNC²»´æÔÚ»òÕßÒÑÉ¾³ı!");
-					if(pks_map.get(pk)==null) {
-						pks_list.add(pk);
-						pks_map.put(pk, pk);
-					}
-					scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+pk+"'");  //Éú²ú¶©µ¥ÀàĞÍ
-					scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+pk+"'");  //¶©µ¥½»Ò×ÀàĞÍ±àÂë
-				}
-				String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//Éú²ú±¨¸æÀàĞÍcode
-				if(scbgCode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½Á÷³ÌÉú²ú¶©µ¥ÀàĞÍ£º" + scddlxbm + "¶ÔÓ¦µÄÉú²ú±¨¸æÀàĞÍ¹ØÏµ");
-				}
-				String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//¿â´æ²ú³ÉÆ·Èë¿âÀàĞÍcode
-				if(ccprkCode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½Éú²ú±¨¸æÀàĞÍ£º" + scbgCode + "¶ÔÓ¦µÄ¿â´æ²ú³ÉÆ·Èë¿âµ¥ÀàĞÍ¹ØÏµ");
-				}
-				String[] pks = pks_list.toArray(new String[pks_list.size()]);
-				AbstractBill[] PV=(AbstractBill[])IQ.queryAbstractBillsByPks(PMOAggVO.class, pks);
-				for(int j=0;j<PV.length;j++) {
-					PMOAggVO pmovo = (PMOAggVO)PV[j];
-					PMOAggVO[] pmos = {pmovo};
-
-					PMOItemVO[] piv = (PMOItemVO[])PV[j].getChildrenVO();
-					String fitemstatus = String.valueOf(piv[0].getAttributeValue("fitemstatus"));
-					if(fitemstatus.equals("4")) {
-						PmoService.put(pmos);
-					}	
-				}
-				
-				WV = (AggWrVO[])PfUtilTools.runChangeDataAry("55A2","55A4", PV);
-				List<WrItemVO> wgblist = new ArrayList();
-				AggWrVO wghvo = new AggWrVO();
-				WV[0].getParentVO().setFbillstatus(1);
-				wghvo.setParentVO(WV[0].getParentVO());
-				
-				for(int r=0;r<WV.length;r++) {
-					WrItemVO[] WI = WV[0].getChildrenVO();
-					for(int s=0;s<WI.length;s++) {
-						String Cbfirstmobid = WI[s].getCbfirstmobid();
-						for (int t=0;t<list.size();t++){
-							String cmoid = list.getJSONObject(t).getString("cmoid")==null?"null":list.getJSONObject(t).getString("cmoid");
-							UFDouble nbwrnum = list.getJSONObject(t).getString("nbwrnum")==null?null:new UFDouble(list.getJSONObject(t).getString("nbwrnum"));
-							UFDouble nbwrastnum = list.getJSONObject(t).getString("nbwrastnum")==null?null:new UFDouble(list.getJSONObject(t).getString("nbwrastnum"));
-							String batchcode = list.getJSONObject(t).getString("batchcode")==null?"null":list.getJSONObject(t).getString("batchcode");
-							if(cmoid.equals(Cbfirstmobid)) {
-								
-								WrItemVO newitem = (WrItemVO)WI[s].clone();
-								newitem.setVbrowno(String.valueOf(t)+"0");
-								newitem.setNbwrastnum(nbwrastnum);
-								newitem.setNbwrnum(nbwrnum);
-								newitem.setNbcheckastnum(nbwrastnum);
-								newitem.setNbchecknum(nbwrnum);
-								newitem.setVbinbatchcode(batchcode);
-								newitem.setFbproducttype(1);
-								newitem.setTbstarttime(new UFDateTime(System.currentTimeMillis()));
-								newitem.setTbendtime(new UFDateTime(System.currentTimeMillis()+1));
-								wgblist.add(newitem);
-							}
-						}
-					}
-				}
-				wghvo.setChildrenVO(wgblist.toArray(new WrItemVO[wgblist.size()]));
-				AggWrVO[] wgaggvo = {wghvo};
-				WV = IPM.insert(wgaggvo);
-				AggWrVO[] WV2 = (AggWrVO[])pfaction.processAction("APPROVE", "55A4", null, WV[0], null, null);
-//				FinProdInVO[] pv = (FinProdInVO[])pfaction.processAction("55A4", "46", null, WV2[0], null, null);
-				FinProdInVO pv = (FinProdInVO)PfUtilTools.runChangeData("55A4", "46", WV2[0]);
-				pv.getHead().setStatus(VOStatus.NEW);
-				pv.getHead().setCwarehouseid(cwarehouseid);
-				pv.getHead().setCprowarehouseid(cwarehouseid);
-				pv.getHead().setVdef1(wmsID);
-//				FinProdInBodyVO pbv = pv.getBody(0);
-				UFBoolean Breworkflag = UFBoolean.FALSE;
-				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
-				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //µ±Éú²ú¶©µ¥ÀàĞÍÎª·µ¹¤Á÷³ÌÉú²ú¶©µ¥Ê±£¬²ú³ÉÆ·Èë¿âÒ²ÉèÎª¸ÃÀàĞÍ
-					Breworkflag = UFBoolean.TRUE;
-				}
-				pv.getHead().setVtrantypecode(ccprkCode);
-				pv.getHead().setCtrantypeid(ccprkId);
-				
-				FinProdInBodyVO[] pbvs = pv.getBodys();
-				List<String> sqllist = new ArrayList();
-				Map sendmap = new HashMap();
-				for(int q=0;q<pbvs.length;q++) {
-					String cfirstbillbid = pbvs[q].getCfirstbillbid();
-					for(int c=0;c<list.size();c++) {
-						String cmoid = list.getJSONObject(c).getString("cmoid")==null?"null":list.getJSONObject(c).getString("cmoid");
-						UFDouble nbwrnum = list.getJSONObject(c).getString("nbwrnum")==null?null:new UFDouble(list.getJSONObject(c).getString("nbwrnum"));
-						UFDouble nbwrastnum = list.getJSONObject(c).getString("nbwrastnum")==null?null:new UFDouble(list.getJSONObject(c).getString("nbwrastnum"));
-						String batchcode = list.getJSONObject(c).getString("batchcode")==null?"null":list.getJSONObject(c).getString("batchcode");
-						String vbatchcodenote = list.getJSONObject(c).getString("vbatchcodenote")==null?"null":list.getJSONObject(c).getString("vbatchcodenote");
-						String cstateid = list.getJSONObject(c).getString("cstateid")==null?"null":list.getJSONObject(c).getString("cstateid");
-						if(cfirstbillbid.equals(cmoid)) {
-							if(sendmap.get(c)!=null)
-								continue;
-							pbvs[q].setNassistnum(pbvs[q].getNshouldassistnum());
-							pbvs[q].setNnum(pbvs[q].getNshouldnum());
-							pbvs[q].setVbatchcode(batchcode);
-							pbvs[q].setPk_batchcode(queryPK_batchcode(batchcode,pbvs[q].getCmaterialoid()));
-							pbvs[q].setVbatchcodenote(vbatchcodenote);
-							pbvs[q].setCstateid(cstateid);
-							pbvs[q].setBreworkflag(Breworkflag);
-//							pbv.setCstateid("1001A210000000070OZ8");  //¿â´æ×´Ì¬
-							pbvs[q].setCbodywarehouseid(cwarehouseid);
-							pbvs[q].setDproducedate(dmakedate_d);
-							pbvs[q].setDbizdate(dmakedate_d);
-							pbvs[q].setDvalidate(getDvalidate(pbvs[q].getCmaterialoid(),pv.getHead().getPk_org(),dmakedate_d));
-							pbvs[q].setStatus(VOStatus.NEW);
-							sqllist.add("update mm_mo m set m.ninnum=(select sum(fb.nnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' "
-						+ "and fb.dr=0),m.ninastnum=(select sum(fb.nassistnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' and fb.dr=0) where m.cmoid='"+cmoid+"'");
-							sendmap.put(c, c);
-							break;
-						}
-						
-					}
-				}
-				FP_origin = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, pv, null, null); 
-				for(int g=0;g<sqllist.size();g++)
-					dao.executeUpdate(sqllist.get(g));
-				successMessage = "NC²ú³ÉÆ·Èë¿âµ¥±£´æ";
-				if(sighFlag.equals("Y")) {
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					pfaction.processAction("SIGN", "46", null, FP_origin[0],null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
-				}
-				successMessage = successMessage+"³É¹¦£¡";
-				rewriteWr(WV[0].getParentVO().getPk_wr());
-				returnJson.setResultBillcode(FP_origin[0].getParentVO().getVbillcode());
-				returnJson.setReturnMessage(successMessage);
-				returnJson.setStatus("1");
-			} catch (Exception e) {
-				// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-				returnJson.setResultBillcode("");
-				returnJson.setStatus("0");
-				returnJson.setReturnMessage(e.toString());
-				if(FP_origin!=null&&FP_origin.length>0){
-					String pk = FP_origin[0].getParentVO().getCgeneralhid();
-					FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("DELETE", "46", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-				if(WV!=null&&WV.length>0){
-					String pk = WV[0].getParentVO().getPk_wr();
-					AggWrVO errorVo = IQ.querySingleBillByPk(AggWrVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("UNAPPROVE", "55A4", null, errorVo, null, null);
-						pfaction.processAction("DELETE", "55A4", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-			}
-			return RestUtils.toJSONString(returnJson);
-	 }
-	 
-	 //»ØĞ´Íê¹¤Èë¿âµÄÈë¿âÖ÷ÊıÁ¿
-	 private void rewriteWr(String pk_wr) throws Exception{
-			String sql ="select q.pk_wr_quality from mm_wr_product p inner join mm_wr_quality q on p.pk_wr_product=q.pk_wr_product_q where p.pk_wr='"+pk_wr+"' and p.dr=0 and q.dr=0";
-			List<Object[]> results = (List<Object[]>) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql, new ArrayListProcessor());
-			if (results != null && results.size() > 0){
-				for(int k=0;k<results.size();k++){
-					String pk_wr_quality = String.valueOf(results.get(k)[0]);	
-					String sql2 = "update mm_wr_quality q set q.nginnum=q.ngnum, q.nginastnum=q.ngastnum where q.pk_wr_quality='"+pk_wr_quality+"'";
-					dao.executeUpdate(sql2);
-				}
-			}
-		}
-	 
-	 public JSONString Generate46_NS(JSONObject jsonAy) {
-			// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
-			returnvo returnJson = new returnvo();
-			String successMessage = "";
-			FinProdInVO[] result = null;
-			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
-			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-				try {
-					String wmsID = jsonAy.getString("wmsID");  
-					if(wmsID!=null) {
-						String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
-						String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
-						if(wmsflag!=null) {
-							returnJson.setResultBillcode(wmsflag);
-							returnJson.setReturnMessage("NC²ú³ÉÆ·Èë¿âµ¥±£´æ²¢Ç©×Ö³É¹¦£¡");
-							returnJson.setStatus("1");
-							return RestUtils.toJSONString(returnJson);
-//							throw new Exception("IDÎª"+wmsID+"µÄWMSµ¥¾İÒÑÔÚNCÉú³É¹ı²ú³ÉÆ·Èë¿âµ¥£¬ÖØ¸´ÍÆµ¥£¬Çë¼ì²é£¡");
-						}		
-					}
-					String userID = jsonAy.getString("userID");  //ÖÆµ¥ÈËID
-					String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-					String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-					if(cuserid==null)
-						throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-					String approver = jsonAy.getString("approverID");  //ÉóÅúÈËID
-					String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-					String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-					if(approverid==null)
-						throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-					String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-					String vnote = jsonAy.getString("vnote");  //±¸×¢
-					String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-
-					String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-					UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-					UFDate dmakedate_d = dmakedate_t.getDate();	
-					InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-					JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-					String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-					String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-					String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-					String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
-					String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
-					String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-					
-//					String ctrantypeCode = jsonAy.getString("ctrantypeCode");  //³öÈë¿âÀàĞÍ±àÂë
-					String cbizid = jsonAy.getString("cbizid");  //ÒµÎñÔ±ID
-					String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //¿â¹ÜÔ±ID
-					String pk_dept = jsonAy.getString("pk_dept");  //Éú²ú²¿ÃÅID
-					String pk_dept_v = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+pk_dept+"'");
-					if(pk_dept!=null&&pk_dept_v==null)
-						throw new Exception("²¿ÃÅID"+pk_dept+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-//					String sql_trantype = "select t.pk_billtypeid from bd_billtype t where t.pk_billtypecode='"+ctrantypeCode+"' and t.pk_group='"+groupId+"'";
-//					String ctrantypeid = (String) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql_trantype, new ColumnProcessor());
-					InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-					InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-					FinProdInVO mvo = new FinProdInVO();
-					FinProdInHeadVO hvo= new FinProdInHeadVO();
-					
-					hvo.setCwarehouseid(cwarehouseid);
-					hvo.setCbizid(cbizid);
-					hvo.setCdptid(pk_dept);
-					hvo.setCdptvid(pk_dept_v);
-					hvo.setCorpoid(pk_org);
-					hvo.setCorpvid(pk_org_v);
-					hvo.setCprocalbodyoid(pk_org);
-					hvo.setCprocalbodyvid(pk_org_v);
-					hvo.setCprowarehouseid(cwarehouseid);
-					hvo.setVdef1(wmsID);
-					
-					hvo.setCtrantypeid("0001A110000000002DXT");
-					hvo.setCwhsmanagerid(cwhsmanagerid);
-					hvo.setFbillflag(2);
-					hvo.setIprintcount(0);
-					hvo.setPk_group(pk_group);
-					hvo.setPk_org(pk_org);
-					hvo.setPk_org_v(pk_org_v);
-					hvo.setVtrantypecode("46-01");
-					hvo.setVnote(vnote);
-					hvo.setStatus(VOStatus.NEW);
-					mvo.setParentVO(hvo);
-					FinProdInBodyVO[] MBV = new FinProdInBodyVO[list.size()];
-					for (int s=0;s<list.size();s++){
-						String cmaterialoid = list.getJSONObject(s).getString("cmaterialoid");  //ÎïÁÏid
-						String ccostobject = list.getJSONObject(s).getString("ccostobject");  //³É±¾¶ÔÏó£¨²ú³ÉÆ·ID£©
-//						String cprodprojectid = list.getJSONObject(s).getString("cprodprojectid");  //²ú³ÉÆ·¸¨ÖúÊôĞÔ-ÏîÄ¿
-//						String cprojectid = list.getJSONObject(s).getString("cprojectid");  //ÏîÄ¿
-//						String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //¹¤×÷ÖĞĞÄ
-						String vbatchcode = list.getJSONObject(s).getString("vbatchcode");  //Åú´ÎºÅ
-//						String clocationCode = list.getJSONObject(s).getString("clocationCode")==null?"null":list.getJSONObject(s).getString("clocationCode");  //»õÎ»±àÂë
-//						String clocationid = GetLocationid(cwarehouseid,clocationCode);
-						String vproductbatch = list.getJSONObject(s).getString("vproductbatch");  //Éú²ú¶©µ¥ºÅ
-						String cstateid = list.getJSONObject(s).getString("cstateid");  //¿â´æ×´Ì¬
-						String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //¹¤×÷ÖĞĞÄ
-//						String vskucode = list.getJSONObject(s).getString("vskucode")==null?"":list.getJSONObject(s).getString("vskucode");  //ÌØÕ÷Âë
-						UFDouble nnum = list.getJSONObject(s).getString("nnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nnum"));   //Ö÷ÊıÁ¿
-						UFDouble nassistnum = list.getJSONObject(s).getString("nassistnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nassistnum"));	//¸¨ÊıÁ¿	
-						String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
-								+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
-						HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
-						String castunitid = "";
-						String pk_source = "";
-						String zdw = "";
-						String measrate = "";
-						if(materialMap!=null&&materialMap.get("zdw")!=null){
-							castunitid=materialMap.get("pk_measdoc")==null?materialMap.get("zdw").toString():materialMap.get("pk_measdoc").toString();
-							pk_source=materialMap.get("pk_source").toString();
-							zdw=materialMap.get("zdw").toString();
-							measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
-						}else
-							throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-//						MaterialOutBodyVO bvo = MBV[s];
-						FinProdInBodyVO bvo = new FinProdInBodyVO();
-						bvo.setBbarcodeclose(UFBoolean.FALSE);
-						bvo.setBcseal(UFBoolean.FALSE);
-						bvo.setBonroadflag(UFBoolean.FALSE);
-						bvo.setBreworkflag(UFBoolean.FALSE);
-						bvo.setCastunitid(castunitid);
-						bvo.setCbodytranstypecode("46-01");
-						bvo.setCbodywarehouseid(cwarehouseid);
-						bvo.setCmaterialoid(cmaterialoid);
-						bvo.setCmaterialvid(pk_source);
-						bvo.setCorpoid(pk_org);
-						bvo.setCorpvid(pk_org_v);
-						bvo.setCproductid(ccostobject);
-						bvo.setCrowno(String.valueOf(s)+"0");
-						bvo.setCstateid(cstateid);
-						bvo.setCunitid(zdw);
-						bvo.setCworkcenterid(cworkcenterid);
-						bvo.setFlargess(UFBoolean.FALSE);
-						bvo.setFproductclass(1);
-						bvo.setNassistnum(nassistnum);
-						bvo.setNnum(nnum);
-						bvo.setNshouldassistnum(nassistnum);
-						bvo.setNshouldnum(nnum);
-						bvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
-						bvo.setPk_group(pk_group);
-						bvo.setPk_org(pk_org);
-						bvo.setPk_org_v(pk_org_v);
-						bvo.setVbatchcode(vbatchcode);
-						bvo.setVchangerate(measrate);
-						bvo.setVproductbatch(vproductbatch);
-						bvo.setDproducedate(dmakedate_d);
-						bvo.setDbizdate(dmakedate_d);
-						bvo.setDvalidate(getDvalidate(cmaterialoid,pk_org,dmakedate_d));
-						MBV[s] = bvo;
-						MBV[s].setStatus(VOStatus.NEW);
-					}
-
-					mvo.setChildrenVO(MBV);
-					result = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, mvo, null, null);
-					successMessage = "NC²ú³ÉÆ·Èë¿âµ¥±£´æ";
-					if(sighFlag.equals("Y")){
-						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-						UFDateTime taudittime_t = new UFDateTime(taudittime);			
-						InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-						InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-						FinProdInVO[] result2 = (FinProdInVO[])pfaction.processAction("SIGN", "46", null, result[0], null, null);
-						successMessage = successMessage+"²¢Ç©×Ö";
-					}
-					successMessage = successMessage+"³É¹¦£¡";
-					
-					returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
-					returnJson.setReturnMessage(successMessage);
-					returnJson.setStatus("1");	
-					
-				} catch (Exception e) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-					returnJson.setResultBillcode("");
-					returnJson.setStatus("0");
-					returnJson.setReturnMessage(e.toString());
-					if(result!=null&&result.length>0){
-						String pk = result[0].getParentVO().getCgeneralhid();
-						FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
-						try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//							InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-							pfaction.processAction("DELETE", "46", null, errorVo, null, null);
-						} catch (BusinessException e1) {
-							// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-							e1.printStackTrace();
-						}
-					}
-				}
-				return RestUtils.toJSONString(returnJson);
-	 }
-	 
-	 public JSONString Generate46_oth(JSONObject jsonAy) {
-			returnvo returnJson = new returnvo();
-			String successMessage = "";
-			FinProdInVO[] FP_origin = null;
-			AggWrVO[] WV = null;
-			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
-			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-			IPwrMaintainService IPM = (IPwrMaintainService) NCLocator.getInstance().lookup(IPwrMaintainService.class);
-			IPMOBusinessService PmoService = (IPMOBusinessService) NCLocator.getInstance().lookup(IPMOBusinessService.class);
-			try {
-				String wmsID = jsonAy.getString("wmsID");  
-				if(wmsID!=null) {
-					String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
-					String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
-					if(wmsflag!=null) {
-						returnJson.setResultBillcode(wmsflag);
-						returnJson.setReturnMessage("NC²ú³ÉÆ·Èë¿âµ¥±£´æ²¢Ç©×Ö³É¹¦£¡");
-						returnJson.setStatus("1");
-						return RestUtils.toJSONString(returnJson);
-//						throw new Exception("IDÎª"+wmsID+"µÄWMSµ¥¾İÒÑÔÚNCÉú³É¹ı²ú³ÉÆ·Èë¿âµ¥£¬ÖØ¸´ÍÆµ¥£¬Çë¼ì²é£¡");
-					}		
-				}
-				String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-				String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-				String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-				if(cuserid==null)
-					throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-				String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-				String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-				if(approverid==null)
-					throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-
-				String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-//				String replenishflag = jsonAy.getString("replenishflag");  //ÊÇ·ñÍË¿â
-//				UFBoolean replenishflag2 = UFBoolean.FALSE;
-//				if(replenishflag!=null&&replenishflag.equals("Y"))
-//					replenishflag2 = UFBoolean.TRUE;
-				String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-				UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
-				UFDate dmakedate_d = dmakedate_t.getDate();	
-				InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-				String cpmohid = jsonAy.getString("cpmohid");  //Éú²ú¶©µ¥ID
-				String scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //Éú²ú¶©µ¥ÀàĞÍ
-				String scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //¶©µ¥½»Ò×ÀàĞÍ±àÂë
-				String cplanoutputid = jsonAy.getString("cplanoutputid");  //¸±²úÆ·±íÌåID
-				String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-				String sql_group = "select p.pk_group from mm_pmo p where p.cpmohid='"+cpmohid+"'";
-				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-				InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-				
-				String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//Éú²ú±¨¸æÀàĞÍcode
-				if(scbgCode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½Á÷³ÌÉú²ú¶©µ¥ÀàĞÍ£º" + scddlxbm + "¶ÔÓ¦µÄÉú²ú±¨¸æÀàĞÍ¹ØÏµ");
-				}
-				String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//¿â´æ²ú³ÉÆ·Èë¿âÀàĞÍcode
-				if(ccprkCode == null) {
-					throw new Exception("Ã»ÓĞÕÒµ½Éú²ú±¨¸æÀàĞÍ£º" + scbgCode + "¶ÔÓ¦µÄ¿â´æ²ú³ÉÆ·Èë¿âµ¥ÀàĞÍ¹ØÏµ");
-				}
-						
-				UFDouble nbwrastnum = jsonAy.getString("nbwrastnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrastnum"));  //Íê¹¤ÊıÁ¿
-				UFDouble nbwrnum = jsonAy.getString("nbwrnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrnum"));  //Íê¹¤Ö÷ÊıÁ¿
-				String batchcode = jsonAy.getString("batchcode");  //Èë¿âÅú´ÎºÅ
-				String vbatchcodenote = jsonAy.getString("vbatchcodenote");  //Åú´Î±¸×¢
-				String cstateid = jsonAy.getString("cstateid");
-				String[] pks = {cpmohid};
-				//IPMOQueryService
-				IPMOQueryService IPQ = (IPMOQueryService) NCLocator.getInstance().lookup(IPMOQueryService.class);
-				AbstractBill[] PV=(AbstractBill[])IPQ.queryByPks(pks);
-				if (PV==null||PV.length==0){
-					throw new Exception("´«ÊäµÄÉú²ú¶©µ¥IDÔÚÏµÍ³²»´æÔÚ»òÕßÒÑÉ¾³ı!");
-				}
-				PMOAggVO pmovo = (PMOAggVO)PV[0];
-				PMOAggVO[] pmos = {pmovo};
-				PMOItemVO[] piv = (PMOItemVO[])PV[0].getChildrenVO();
-				List<PMOItemVO> bodylist = new ArrayList();
-				List<PMOPlanOutputVO> opv = new ArrayList();
-				String fitemstatus = String.valueOf(piv[0].getAttributeValue("fitemstatus"));
-				if(fitemstatus.equals("4")) {
-					PmoService.put(pmos);
-				}
-				for(int w=0;w<piv.length;w++) {
-					PMOPlanOutputVO[] ppos = piv[w].getPlanoutputs();
-					if(ppos==null)
-						continue;
-					for(int r=0;r<ppos.length;r++) {
-						String pid = ppos[r].getCplanoutputid();
-						if(cplanoutputid.equals(pid)) {
-							opv.add(ppos[r]);
-							bodylist.add(piv[w]);
-						}
-					}
-				}
-				if(opv==null||opv.size()==0)
-					throw new Exception("´«ÊäµÄÁª·ù²úÆ·IDÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				PV[0].setChildrenVO(bodylist.toArray(new PMOItemVO[bodylist.size()]));
-				WV = (AggWrVO[])PfUtilTools.runChangeDataAry("55A2","55A4", PV);
-				WV[0].getParentVO().setFbillstatus(1);
-				WrItemVO[] WI = WV[0].getChildrenVO();
-				PMOPlanOutputVO lfcpvo = opv.get(0);
-
-				WI[0].setVbrowno("10");
-				WI[0].setCbastunitid(lfcpvo.getCastunitid());
-				WI[0].setCbbomversionid("~");
-				WI[0].setCbmainbomid("");
-				WI[0].setCbmaterialid(lfcpvo.getCmaterialid());
-				WI[0].setCbmaterialvid(lfcpvo.getCmaterialvid());
-				WI[0].setCbmobid(lfcpvo.getCplanoutputid());
-				WI[0].setCbworkmanid("~");
-				WI[0].setFbproducttype(lfcpvo.getFoutputtype());
-				WI[0].setNbwrastnum(nbwrastnum);
-				WI[0].setNbwrnum(nbwrnum);
-				WI[0].setVbinbatchcode(batchcode);
-				WI[0].setVbbomversioncode("");
-				WI[0].setVbfirstrowid(lfcpvo.getCplanoutputid());
-				WI[0].setVbsrcrowid(lfcpvo.getCplanoutputid());
-				WI[0].setTbstarttime(new UFDateTime(System.currentTimeMillis()));
-				WI[0].setTbendtime(new UFDateTime(System.currentTimeMillis()+1));
-				WV = IPM.insert(WV);
-				AggWrVO[] WV2 = (AggWrVO[])pfaction.processAction("APPROVE", "55A4", null, WV[0], null, null);
-//				FinProdInVO[] pv = (FinProdInVO[])pfaction.processAction("55A4", "46", null, WV2[0], null, null);
-				FinProdInVO pv = (FinProdInVO)PfUtilTools.runChangeData("55A4", "46", WV2[0]);
-				pv.getHead().setStatus(VOStatus.NEW);
-				pv.getHead().setCwarehouseid(cwarehouseid);
-				pv.getHead().setCprowarehouseid(cwarehouseid);
-				pv.getHead().setVtrantypecode("46-01");
-				pv.getHead().setCtrantypeid("0001A110000000002DXT");
-				pv.getHead().setVdef1(wmsID);
-				FinProdInBodyVO pbv = pv.getBody(0);
-				
-				String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
-				if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //µ±Éú²ú¶©µ¥ÀàĞÍÎª·µ¹¤Á÷³ÌÉú²ú¶©µ¥Ê±£¬²ú³ÉÆ·Èë¿âÒ²ÉèÎª¸ÃÀàĞÍ
-					pbv.setBreworkflag(UFBoolean.TRUE);
-				}
-				pv.getHead().setVtrantypecode(ccprkCode);
-				pv.getHead().setCtrantypeid(ccprkId);
-				
-				String zcp = queryOne("select o.cmaterialid from mm_mo_planoutput p inner join mm_mo o on p.cmoid=o.cmoid where p.cplanoutputid='"+lfcpvo.getCplanoutputid()+"'");
-				pbv.setNassistnum(pbv.getNshouldassistnum());
-				pbv.setNnum(pbv.getNshouldnum());
-				pbv.setVbatchcode(batchcode);
-				pbv.setPk_batchcode(queryPK_batchcode(batchcode,pbv.getCmaterialoid()));
-				pbv.setVbatchcodenote(vbatchcodenote);
-				pbv.setCstateid(cstateid);
-				
-				pbv.setCproductid(zcp);
-//				pbv.setCstateid("1001A210000000070OZ8");  //¿â´æ×´Ì¬
-				pbv.setCbodywarehouseid(cwarehouseid);
-				pbv.setDproducedate(dmakedate_d);
-				pbv.setDbizdate(dmakedate_d);
-				pbv.setDvalidate(getDvalidate(pbv.getCmaterialoid(),pv.getHead().getPk_org(),dmakedate_d));
-				pbv.setStatus(VOStatus.NEW);
-			    FP_origin = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, pv, null, null); 
-				successMessage = "NC²ú³ÉÆ·Èë¿âµ¥±£´æ";
-				if(sighFlag.equals("Y")) {
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					pfaction.processAction("SIGN", "46", null, FP_origin[0],null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
-				}
-				successMessage = successMessage+"³É¹¦£¡";
-				returnJson.setResultBillcode(FP_origin[0].getParentVO().getVbillcode());
-				returnJson.setReturnMessage(successMessage);
-				returnJson.setStatus("1");
-			} catch (Exception e) {
-				// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-				returnJson.setResultBillcode("");
-				returnJson.setStatus("0");
-				returnJson.setReturnMessage(e.toString());
-				if(FP_origin!=null&&FP_origin.length>0){
-					String pk = FP_origin[0].getParentVO().getCgeneralhid();
-					FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("DELETE", "46", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-				if(WV!=null&&WV.length>0){
-					String pk = WV[0].getParentVO().getPk_wr();
-					AggWrVO errorVo = IQ.querySingleBillByPk(AggWrVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("UNAPPROVE", "55A4", null, errorVo, null, null);
-						pfaction.processAction("DELETE", "55A4", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-			}
-			return RestUtils.toJSONString(returnJson);
-	 }
-	 
-	 public JSONString Generate4Y(JSONObject jsonAy) {
-		 returnvo returnJson = new returnvo();
-		 Map ret = new HashMap();
-		 TransOutVO[] result = null;
-			try {
-				NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
-				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));	
-				String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-				String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-				String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-				if(cuserid==null)
-					throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-				String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-				String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-				if(approverid==null)
-					throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				
-				String pkOders = jsonAy.getString("cbillid");  //µ÷²¦¶©µ¥±íÍ·idÊı×é
-				String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âid
-				String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-				JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-				String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-				String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
-				String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-				UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
-				InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-				InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-				InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
-				String[] pks = null;
-				if (pkOders != null && pkOders.length()>2){
-					pkOders = pkOders.substring(1, pkOders.length()-1);
-					pks = pkOders.split(",");
-				}else
-					throw new Exception("µ÷²¦¶©µ¥IDÊôĞÔÎª¿Õ£¬Çë¼ì²é´«Êä²ÎÊı£¡");
-				IBillQueryService IBQ = (IBillQueryService)NCLocator.getInstance().lookup(IBillQueryService.class);
-				AbstractBill[] SVO = IBQ.queryAbstractBillsByPks(BillVO.class, pks);
-				if (SVO==null||SVO[0]==null){
-					throw new Exception("´«ÊäµÄµ÷²¦¶©µ¥IDÔÚNCÏµÍ³ÖĞ²»´æÔÚ");
-				}
-//				for(int s=0;s<SVO.length;s++) {
-//					BillItemVO[] bhis = (BillItemVO[])SVO[s].getChildrenVO();
-//					for(int t=0;t<bhis.length;t++) {
-//						bhis[t].setCoutstordocid(cwarehouseid);
-//					}
-//				}
-				//µ¥¾İ×ª»»
-				TransOutVO[] transOuts = (TransOutVO[])PfUtilTools.runChangeDataAry("5X", "4Y", SVO);
-				for(TransOutVO transOut : transOuts){
-					transOut.getParentVO().setCwarehouseid(cwarehouseid);
-					transOut.getParentVO().setStatus(2);
-					TransOutBodyVO[] bodys = (TransOutBodyVO[]) transOut.getChildrenVO();
-//					TransOutBodyVO[] mbvs = new TransOutBodyVO[list.size()];
-					List<TransOutBodyVO > mbvs = new ArrayList<TransOutBodyVO>();
-					for (int i = 0; i < list.size(); i++){
-						String cbill_bid = list.getJSONObject(i).getString("cbill_bid") == null ? "null" : list.getJSONObject(i).getString("cbill_bid");
-						UFDouble nnum = list.getJSONObject(i).getString("nnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nnum"));
-						UFDouble nastnum = list.getJSONObject(i).getString("nastnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nastnum"));				
-						String vbatchcode = list.getJSONObject(i).getString("vbatchcode") == null ? "null" : list.getJSONObject(i).getString("vbatchcode");
-						String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
-						String clocationid = GetLocationid(cwarehouseid,clocationCode);
-						String cstateid = list.getJSONObject(i).getString("cstateid");
-//						String cvmivenderid = list.getJSONObject(i).getString("cvmivenderid")==null?"":list.getJSONObject(i).getString("cvmivenderid");  //¼Ä´æ¹©Ó¦ÉÌid
-						
-						//Ñ­»·Æ¥Åä±íÌå
-						for (int s = 0; s < bodys.length; s++){
-							//½«¶ÔÓ¦µÄÖ÷ÊıÁ¿¡¢Åú´ÎºÅµÈ½øĞĞÌî³ä
-							if(cbill_bid.equals(bodys[s].getCsourcebillbid())){
-								bodys[s].setVbatchcode(vbatchcode);
-								bodys[s].setPk_batchcode(queryPK_batchcode(vbatchcode,bodys[s].getCmaterialoid()));
-								bodys[s].setClocationid(clocationid);
-								bodys[s].setDbizdate(new UFDate(dmakedate));
-								bodys[s].setDvalidate(getDvalidate(bodys[s].getCmaterialoid(),transOut.getParentVO().getPk_org(),new UFDate(dmakedate)));
-								bodys[s].setDproducedate(new UFDate(dmakedate));
-								bodys[s].setNassistnum(nastnum);
-								bodys[s].setNnum(nnum);
-								bodys[s].setNshouldassistnum(nastnum);
-								bodys[s].setNshouldnum(nnum);
-								bodys[s].setCstateid(cstateid);
-								TransOutBodyVO newvo = (TransOutBodyVO)bodys[s].clone();
-								newvo.setCrowno(String.valueOf(i)+"0");
-								newvo.setStatus(2);
-								mbvs.add(newvo);
-								break;
-							}
-						}
-					}
-					if(mbvs==null||mbvs.size()==0) {
-						continue;
-					}
-					transOut.setChildrenVO(mbvs.toArray(new TransOutBodyVO[mbvs.size()]));
-					//µ÷²¦³ö¿âµ¥
-					result = (TransOutVO[])pfaction.processAction("WRITE", "4Y", null, transOut, null, null);
-					String resultBillcode = new String(result[0].getParentVO().getVbillcode());
-					
-					String successMessage = "NCµ÷²¦³ö¿âµ¥±£´æ";
-					if(sighFlag.equals("Y")){
-						String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-						UFDateTime taudittime_t = new UFDateTime(taudittime);			
-						InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-						InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-						result = (TransOutVO[]) pfaction.processAction("SIGN", "4Y", null, result[0], null, null);
-						successMessage = successMessage+"²¢Ç©×Ö";
-					}
-					successMessage = successMessage+"³É¹¦£¡";
-					
-					String[] cgeneralhIds = {result[0].getParentVO().getCgeneralhid()};
-//					this.Generate_Media4E(cgeneralhIds,bodys);  //¸ÄÁËÁ÷³Ì£¬Ç©×Ö×Ô¶¯Éú³ÉÏÂÓÎµ¥¾İÁË£¬ËùÒÔ²»ĞèÔÚ½Ó¿ÚÉú³É
-//					returnJson.setResultBillcode(resultBillcode);
-//					returnJson.setReturnMessage(successMessage);
-//					returnJson.setStatus("1");	
-					ret.put("ResultBillcode", resultBillcode);
-					ret.put("ReturnMessage", successMessage);
-					ret.put("Status","1");
-					ret.put("cgeneralhid",result[0].getParentVO().getCgeneralhid());
-					List<Map> mapList2 = new ArrayList();
-					TransOutBodyVO[] bvos = result[0].getBodys();
-					for(int k=0;k<bvos.length;k++) {
-						String csourcebid = bvos[k].getCsourcebillbid();
-						String cgeneralbid = bvos[k].getCgeneralbid();
-						String Vbatchcode = bvos[k].getVbatchcode();
-						Map map_msv = new HashMap();
-						map_msv.put("cbill_bid", csourcebid);
-						map_msv.put("cgeneralbid", cgeneralbid);
-						map_msv.put("vbatchcode", Vbatchcode);
-						mapList2.add(map_msv);
-					}
-					ret.put("ids",mapList2);
-				}
-			} catch (Exception e) {
-				ret.put("ResultBillcode", "");
-				ret.put("ReturnMessage", e.toString());
-				ret.put("Status","0");
-				if(result!=null&&result.length>0){
-					String pk = result[0].getParentVO().getCgeneralhid();
-					TransOutVO errorVo = IQ.querySingleBillByPk(TransOutVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("DELETE", "4Y", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
-					}
-				}
-			}
-			return RestUtils.toJSONString(ret);
-	 }
-	 
-     public JSONString Generate4E(JSONObject jsonAy) {
-    	returnvo returnJson = new returnvo();
-    	TransInVO[] result = null;
- 		try {
- 			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
- 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));	
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
- 			
- 			String cgeneralhids = jsonAy.getString("cgeneralhid");  //µ÷²¦³ö¿âµ¥±íÍ·idÊı×é
- 			String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âid
- 			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
- 			JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
- 			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
- 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
- 			if(pk_group==null)
- 				throw new Exception("´«ÈëµÄ²Ö¿âID:"+cwarehouseid+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
- 			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+//				String replenishflag = jsonAy.getString("replenishflag");  //æ˜¯å¦é€€åº“
+//				UFBoolean replenishflag2 = UFBoolean.FALSE;
+//				if(replenishflag!=null&&replenishflag.equals("Y"))
+//					replenishflag2 = UFBoolean.TRUE;
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
- 			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
- 			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
- 			String[] pks = null;
- 			if (cgeneralhids != null && cgeneralhids.length()>2){
- 				cgeneralhids = cgeneralhids.substring(1, cgeneralhids.length()-1);
- 				pks = cgeneralhids.split(",");
- 			}else
- 				throw new Exception("µ÷²¦³ö¿âµ¥IDÊôĞÔÎª¿Õ£¬Çë¼ì²é´«Êä²ÎÊı£¡");
- 			IBillQueryService IBQ = (IBillQueryService)NCLocator.getInstance().lookup(IBillQueryService.class);
- 			AbstractBill[] SVO = IBQ.queryAbstractBillsByPks(TransOutVO.class, pks);
- 			if (SVO==null||SVO[0]==null){
- 				throw new Exception("´«ÊäµÄµ÷²¦³ö¿âµ¥IDÔÚNCÏµÍ³ÖĞ²»´æÔÚ");
- 			}
- 			//µ¥¾İ×ª»»
- 			TransInVO[] transIns = (TransInVO[])PfUtilTools.runChangeDataAry("4Y", "4E", SVO);
- 			for(TransInVO transIn : transIns){
- 				transIn.getParentVO().setCwarehouseid(cwarehouseid);
- 				transIn.getParentVO().setStatus(2);
- 				TransInBodyVO[] bodys = (TransInBodyVO[]) transIn.getChildrenVO();
- 				TransInBodyVO[] mbvs = new TransInBodyVO[list.size()];
- 				for (int i = 0; i < list.size(); i++){
- 					String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid") == null ? "null" : list.getJSONObject(i).getString("cgeneralbid");
- 					UFDouble nnum = list.getJSONObject(i).getString("nnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nnum"));
- 					UFDouble nastnum = list.getJSONObject(i).getString("nastnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nastnum"));				
- 					String vbatchcode = list.getJSONObject(i).getString("vbatchcode") == null ? "null" : list.getJSONObject(i).getString("vbatchcode");
- 					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"null":list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
- 					String clocationid = GetLocationid(cwarehouseid,clocationCode);
- 					String cstateid = list.getJSONObject(i).getString("cstateid");
-// 					String cvmivenderid = list.getJSONObject(i).getString("cvmivenderid")==null?"":list.getJSONObject(i).getString("cvmivenderid");  //¼Ä´æ¹©Ó¦ÉÌid
- 					//Ñ­»·Æ¥Åä±íÌå
- 					for (int s = 0; s < bodys.length; s++){
- 						//½«¶ÔÓ¦µÄÖ÷ÊıÁ¿¡¢Åú´ÎºÅµÈ½øĞĞÌî³ä
- 						if(cgeneralbid.equals(bodys[s].getCsourcebillbid())){
- 							bodys[s].setVbatchcode(vbatchcode);
- 							bodys[s].setDproducedate(dmakedate_t.getDate());
- 							bodys[s].setDvalidate(getDvalidate(bodys[s].getCmaterialoid(),transIn.getParentVO().getPk_org(),new UFDate(dmakedate)));
- 							bodys[s].setPk_batchcode(queryPK_batchcode(vbatchcode,bodys[s].getCmaterialoid()));
- 							bodys[s].setClocationid(clocationid);
- 							bodys[s].setDbizdate(dmakedate_t.getDate());
- 							bodys[s].setNassistnum(nastnum);
- 							bodys[s].setNnum(nnum);
- 							bodys[s].setNshouldassistnum(nastnum);
- 							bodys[s].setNshouldnum(nnum);
- 							bodys[s].setCstateid(cstateid);
- 							mbvs[i] = (TransInBodyVO)bodys[s].clone();
- 							mbvs[i].setCrowno(String.valueOf(i)+"0");
- 							mbvs[i].setStatus(2);
- 							break;
- 						}
- 					}
- 				}
- 				if(mbvs[0]==null) {
- 					continue;
- 				}
- 				transIn.setChildrenVO(mbvs);
- 				//µ÷²¦³ö¿âµ¥
- 				result = (TransInVO[])pfaction.processAction("WRITE", "4E", null, transIn, null, null);
- 				String resultBillcode = result[0].getParentVO().getVbillcode();
- 				
- 				String successMessage = "NCµ÷²¦Èë¿âµ¥±£´æ";
- 				if(sighFlag.equals("Y")){
- 					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
- 					result = (TransInVO[]) pfaction.processAction("SIGN", "4E", null, result[0], null, null);
- 					successMessage = successMessage+"²¢Ç©×Ö";
- 				}
- 				successMessage = successMessage+"³É¹¦£¡";
- 				returnJson.setResultBillcode(resultBillcode);
- 				returnJson.setReturnMessage(successMessage);
- 				returnJson.setStatus("1");	
- 			}
- 		} catch (Exception e) {
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 			if(result!=null&&result.length>0){
-				String pk = result[0].getParentVO().getCgeneralhid();
-				TransInVO errorVo = IQ.querySingleBillByPk(TransInVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					pfaction.processAction("DELETE", "4E", null, errorVo, null, null);
+			String cpmohid = jsonAy.getString("cpmohid");  //ç”Ÿäº§è®¢å•ID
+			String scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //ç”Ÿäº§è®¢å•ç±»å‹
+			String scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //è®¢å•äº¤æ˜“ç±»å‹ç¼–ç 
+
+			String cmoid = jsonAy.getString("cmoid");  //ç”Ÿäº§è®¢å•è¡¨ä½“ID
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			String sql_group = "select p.pk_group from mm_pmo p where p.cpmohid='"+cpmohid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+
+			String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//ç”Ÿäº§æŠ¥å‘Šç±»å‹code
+			if(scbgCode == null) {
+				throw new Exception("æ²¡æœ‰æ‰¾åˆ°æµç¨‹ç”Ÿäº§è®¢å•ç±»å‹ï¼š" + scddlxbm + "å¯¹åº”çš„ç”Ÿäº§æŠ¥å‘Šç±»å‹å…³ç³»");
+			}
+			String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//åº“å­˜äº§æˆå“å…¥åº“ç±»å‹code
+			if(ccprkCode == null) {
+				throw new Exception("æ²¡æœ‰æ‰¾åˆ°ç”Ÿäº§æŠ¥å‘Šç±»å‹ï¼š" + scbgCode + "å¯¹åº”çš„åº“å­˜äº§æˆå“å…¥åº“å•ç±»å‹å…³ç³»");
+			}
+
+			UFDouble nbwrastnum = jsonAy.getString("nbwrastnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrastnum"));  //å®Œå·¥æ•°é‡
+			UFDouble nbwrnum = jsonAy.getString("nbwrnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrnum"));  //å®Œå·¥ä¸»æ•°é‡
+			String batchcode = jsonAy.getString("batchcode");  //å…¥åº“æ‰¹æ¬¡å·
+			String vbatchcodenote = jsonAy.getString("vbatchcodenote");  //æ‰¹æ¬¡å¤‡æ³¨
+			String cstateid = jsonAy.getString("cstateid");
+			String[] pks = {cpmohid};
+			AbstractBill[] PV=(AbstractBill[])IQ.queryAbstractBillsByPks(PMOAggVO.class, pks);
+			PMOAggVO pmovo = (PMOAggVO)PV[0];
+			PMOAggVO[] pmos = {pmovo};
+
+			if (PV==null||PV.length==0){
+				throw new Exception("ä¼ è¾“çš„ç”Ÿäº§è®¢å•IDåœ¨ç³»ç»Ÿä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
+			}
+			PMOItemVO[] piv = (PMOItemVO[])PV[0].getChildrenVO();
+			List<PMOItemVO> bodylist = new ArrayList();
+			String fitemstatus = String.valueOf(piv[0].getAttributeValue("fitemstatus"));
+			if(fitemstatus.equals("4")) {
+				PmoService.put(pmos);
+			}
+			for(int w=0;w<piv.length;w++) {
+				String bid = piv[w].getCmoid();
+				if(bid.equals(cmoid)) {
+//						if(fitemstatus.equals("2")){
+//							throw new Exception("ä¼ è¾“çš„ç”Ÿäº§è®¢å•å·²å®Œå·¥ï¼Œä¸èƒ½é‡å¤ç”Ÿæˆå®Œå·¥æŠ¥å‘Šï¼");
+//						}else if(fitemstatus.equals("3")){
+//							throw new Exception("ä¼ è¾“çš„ç”Ÿäº§è®¢å·²å…³é—­ï¼");
+//						}else if(!fitemstatus.equals("1")){
+//							throw new Exception("ä¼ è¾“çš„ç”Ÿäº§è®¢çŠ¶æ€ä¸ºæœªæŠ•æ”¾ï¼");
+//						}
+					bodylist.add(piv[w]);
+					break;
+				}
+			}
+			PV[0].setChildrenVO(bodylist.toArray(new PMOItemVO[bodylist.size()]));
+			WV = (AggWrVO[])PfUtilTools.runChangeDataAry("55A2","55A4", PV);
+			WV[0].getParentVO().setFbillstatus(1);
+			WrItemVO[] WI = WV[0].getChildrenVO();
+			WI[0].setVbrowno("10");
+			WI[0].setNbwrastnum(nbwrastnum);
+			WI[0].setNbwrnum(nbwrnum);
+			WI[0].setNbcheckastnum(nbwrastnum);
+			WI[0].setNbchecknum(nbwrnum);
+			WI[0].setVbinbatchcode(batchcode);
+			WI[0].setFbproducttype(1);
+			WI[0].setTbstarttime(new UFDateTime(System.currentTimeMillis()));
+			WI[0].setTbendtime(new UFDateTime(System.currentTimeMillis()+1));
+			WV = IPM.insert(WV);
+			AggWrVO[] WV2 = (AggWrVO[])pfaction.processAction("APPROVE", "55A4", null, WV[0], null, null);
+//				FinProdInVO[] pv = (FinProdInVO[])pfaction.processAction("55A4", "46", null, WV2[0], null, null);
+			FinProdInVO pv = (FinProdInVO)PfUtilTools.runChangeData("55A4", "46", WV2[0]);
+			pv.getHead().setStatus(VOStatus.NEW);
+			pv.getHead().setCwarehouseid(cwarehouseid);
+			pv.getHead().setCprowarehouseid(cwarehouseid);
+			pv.getHead().setVdef1(wmsID);
+			FinProdInBodyVO pbv = pv.getBody(0);
+
+			String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
+			if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //å½“ç”Ÿäº§è®¢å•ç±»å‹ä¸ºè¿”å·¥æµç¨‹ç”Ÿäº§è®¢å•æ—¶ï¼Œäº§æˆå“å…¥åº“ä¹Ÿè®¾ä¸ºè¯¥ç±»å‹
+				pbv.setBreworkflag(UFBoolean.TRUE);
+			}
+			pv.getHead().setVtrantypecode(ccprkCode);
+			pv.getHead().setCtrantypeid(ccprkId);
+
+			pbv.setNassistnum(pbv.getNshouldassistnum());
+			pbv.setNnum(pbv.getNshouldnum());
+			pbv.setVbatchcode(batchcode);
+			pbv.setPk_batchcode(queryPK_batchcode(batchcode,pbv.getCmaterialoid()));
+			pbv.setVbatchcodenote(vbatchcodenote);
+			pbv.setCstateid(cstateid);
+//				pbv.setCstateid("1001A210000000070OZ8");  //åº“å­˜çŠ¶æ€
+			pbv.setCbodywarehouseid(cwarehouseid);
+			pbv.setDproducedate(dmakedate_d);
+			pbv.setDbizdate(dmakedate_d);
+			pbv.setDvalidate(getDvalidate(pbv.getCmaterialoid(),pv.getHead().getPk_org(),dmakedate_d));
+			pbv.setStatus(VOStatus.NEW);
+			FP_origin = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, pv, null, null);
+			dao.executeUpdate("update mm_mo m set m.ninnum=(select sum(fb.nnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' "
+					+ "and fb.dr=0),m.ninastnum=(select sum(fb.nassistnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' and fb.dr=0) where m.cmoid='"+cmoid+"'");
+			successMessage = "NCäº§æˆå“å…¥åº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")) {
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				pfaction.processAction("SIGN", "46", null, FP_origin[0],null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+			rewriteWr(WV[0].getParentVO().getPk_wr());
+			returnJson.setResultBillcode(FP_origin[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(FP_origin!=null&&FP_origin.length>0){
+				String pk = FP_origin[0].getParentVO().getCgeneralhid();
+				FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "46", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
- 		}
- 		return RestUtils.toJSONString(returnJson);
-	 }
+			if(WV!=null&&WV.length>0){
+				String pk = WV[0].getParentVO().getPk_wr();
+				AggWrVO errorVo = IQ.querySingleBillByPk(AggWrVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("UNAPPROVE", "55A4", null, errorVo, null, null);
+					pfaction.processAction("DELETE", "55A4", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
 
-     public JSONString Generate4K(JSONObject jsonAy) {
- 		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
- 		//¹¹Ôì±íÍ· start 
-    	returnvo returnJson = new returnvo();
-    	String resultpk = "";
- 		try {
- 			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
- 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));	
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+	public JSONString Generate46v2(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		String successMessage = "";
+		FinProdInVO[] FP_origin = null;
+		AggWrVO[] WV = null;
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+		IPwrMaintainService IPM = (IPwrMaintainService) NCLocator.getInstance().lookup(IPwrMaintainService.class);
+		IPMOBusinessService PmoService = (IPMOBusinessService) NCLocator.getInstance().lookup(IPMOBusinessService.class);
+		IWrBusinessService WrService = (IWrBusinessService) NCLocator.getInstance().lookup(IWrBusinessService.class);
+		try {
+			String wmsID = jsonAy.getString("wmsID");
+			if(wmsID!=null) {
+				String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
+				String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
+				if(wmsflag!=null) {
+					returnJson.setResultBillcode(wmsflag);
+					returnJson.setReturnMessage("NCäº§æˆå“å…¥åº“å•ä¿å­˜å¹¶ç­¾å­—æˆåŠŸï¼");
+					returnJson.setStatus("1");
+					return RestUtils.toJSONString(returnJson);
+//						throw new Exception("IDä¸º"+wmsID+"çš„WMSå•æ®å·²åœ¨NCç”Ÿæˆè¿‡äº§æˆå“å…¥åº“å•ï¼Œé‡å¤æ¨å•ï¼Œè¯·æ£€æŸ¥ï¼");
+				}
+
+			}
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
 
- 			String outWarehouseid = jsonAy.getString("outWarehouseid");  //²Ö¿âid
- 			String inWarehouseid = jsonAy.getString("inWarehouseid");
- 			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
- 			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+outWarehouseid+"'";
- 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
- 			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+outWarehouseid+"'";
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+
+//				String cmoid = jsonAy.getString("cmoid");  //ç”Ÿäº§è®¢å•è¡¨ä½“ID
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			if(cwarehouseid==null)
+				throw new Exception("ä»“åº“IDä¸èƒ½ä¸ºç©ºï¼");
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			if(pk_group==null)
+				throw new Exception("ä»“åº“IDåœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			ArrayList<String> pks_list = new ArrayList<String>();
+			Map pks_map = new HashMap();
+			String scddlx="";
+			String scddlxbm = "";
+			for(int i=0;i<list.size();i++) {
+				String pk = list.getJSONObject(i).getString("cpmohid")==null?"":list.getJSONObject(i).getString("cpmohid");
+				String scddid = queryOne("select * from mm_pmo p where p.cpmohid='"+pk+"' and p.dr=0");
+				if(scddid==null)
+					throw new Exception("ç”Ÿäº§è®¢å•IDï¼š"+pk+"åœ¨NCä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
+				if(pks_map.get(pk)==null) {
+					pks_list.add(pk);
+					pks_map.put(pk, pk);
+				}
+				scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+pk+"'");  //ç”Ÿäº§è®¢å•ç±»å‹
+				scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+pk+"'");  //è®¢å•äº¤æ˜“ç±»å‹ç¼–ç 
+			}
+			String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//ç”Ÿäº§æŠ¥å‘Šç±»å‹code
+			if(scbgCode == null) {
+				throw new Exception("æ²¡æœ‰æ‰¾åˆ°æµç¨‹ç”Ÿäº§è®¢å•ç±»å‹ï¼š" + scddlxbm + "å¯¹åº”çš„ç”Ÿäº§æŠ¥å‘Šç±»å‹å…³ç³»");
+			}
+			String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//åº“å­˜äº§æˆå“å…¥åº“ç±»å‹code
+			if(ccprkCode == null) {
+				throw new Exception("æ²¡æœ‰æ‰¾åˆ°ç”Ÿäº§æŠ¥å‘Šç±»å‹ï¼š" + scbgCode + "å¯¹åº”çš„åº“å­˜äº§æˆå“å…¥åº“å•ç±»å‹å…³ç³»");
+			}
+			String[] pks = pks_list.toArray(new String[pks_list.size()]);
+			AbstractBill[] PV=(AbstractBill[])IQ.queryAbstractBillsByPks(PMOAggVO.class, pks);
+			for(int j=0;j<PV.length;j++) {
+				PMOAggVO pmovo = (PMOAggVO)PV[j];
+				PMOAggVO[] pmos = {pmovo};
+
+				PMOItemVO[] piv = (PMOItemVO[])PV[j].getChildrenVO();
+				String fitemstatus = String.valueOf(piv[0].getAttributeValue("fitemstatus"));
+				if(fitemstatus.equals("4")) {
+					PmoService.put(pmos);
+				}
+			}
+
+			WV = (AggWrVO[])PfUtilTools.runChangeDataAry("55A2","55A4", PV);
+			List<WrItemVO> wgblist = new ArrayList();
+			AggWrVO wghvo = new AggWrVO();
+			WV[0].getParentVO().setFbillstatus(1);
+			wghvo.setParentVO(WV[0].getParentVO());
+
+			for(int r=0;r<WV.length;r++) {
+				WrItemVO[] WI = WV[0].getChildrenVO();
+				for(int s=0;s<WI.length;s++) {
+					String Cbfirstmobid = WI[s].getCbfirstmobid();
+					for (int t=0;t<list.size();t++){
+						String cmoid = list.getJSONObject(t).getString("cmoid")==null?"null":list.getJSONObject(t).getString("cmoid");
+						UFDouble nbwrnum = list.getJSONObject(t).getString("nbwrnum")==null?null:new UFDouble(list.getJSONObject(t).getString("nbwrnum"));
+						UFDouble nbwrastnum = list.getJSONObject(t).getString("nbwrastnum")==null?null:new UFDouble(list.getJSONObject(t).getString("nbwrastnum"));
+						String batchcode = list.getJSONObject(t).getString("batchcode")==null?"null":list.getJSONObject(t).getString("batchcode");
+						if(cmoid.equals(Cbfirstmobid)) {
+
+							WrItemVO newitem = (WrItemVO)WI[s].clone();
+							newitem.setVbrowno(String.valueOf(t)+"0");
+							newitem.setNbwrastnum(nbwrastnum);
+							newitem.setNbwrnum(nbwrnum);
+							newitem.setNbcheckastnum(nbwrastnum);
+							newitem.setNbchecknum(nbwrnum);
+							newitem.setVbinbatchcode(batchcode);
+							newitem.setFbproducttype(1);
+							newitem.setTbstarttime(new UFDateTime(System.currentTimeMillis()));
+							newitem.setTbendtime(new UFDateTime(System.currentTimeMillis()+1));
+							wgblist.add(newitem);
+						}
+					}
+				}
+			}
+			wghvo.setChildrenVO(wgblist.toArray(new WrItemVO[wgblist.size()]));
+			AggWrVO[] wgaggvo = {wghvo};
+			WV = IPM.insert(wgaggvo);
+			AggWrVO[] WV2 = (AggWrVO[])pfaction.processAction("APPROVE", "55A4", null, WV[0], null, null);
+//				FinProdInVO[] pv = (FinProdInVO[])pfaction.processAction("55A4", "46", null, WV2[0], null, null);
+			FinProdInVO pv = (FinProdInVO)PfUtilTools.runChangeData("55A4", "46", WV2[0]);
+			pv.getHead().setStatus(VOStatus.NEW);
+			pv.getHead().setCwarehouseid(cwarehouseid);
+			pv.getHead().setCprowarehouseid(cwarehouseid);
+			pv.getHead().setVdef1(wmsID);
+//				FinProdInBodyVO pbv = pv.getBody(0);
+			UFBoolean Breworkflag = UFBoolean.FALSE;
+			String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
+			if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //å½“ç”Ÿäº§è®¢å•ç±»å‹ä¸ºè¿”å·¥æµç¨‹ç”Ÿäº§è®¢å•æ—¶ï¼Œäº§æˆå“å…¥åº“ä¹Ÿè®¾ä¸ºè¯¥ç±»å‹
+				Breworkflag = UFBoolean.TRUE;
+			}
+			pv.getHead().setVtrantypecode(ccprkCode);
+			pv.getHead().setCtrantypeid(ccprkId);
+
+			FinProdInBodyVO[] pbvs = pv.getBodys();
+			List<String> sqllist = new ArrayList();
+			Map sendmap = new HashMap();
+			for(int q=0;q<pbvs.length;q++) {
+				String cfirstbillbid = pbvs[q].getCfirstbillbid();
+				for(int c=0;c<list.size();c++) {
+					String cmoid = list.getJSONObject(c).getString("cmoid")==null?"null":list.getJSONObject(c).getString("cmoid");
+					UFDouble nbwrnum = list.getJSONObject(c).getString("nbwrnum")==null?null:new UFDouble(list.getJSONObject(c).getString("nbwrnum"));
+					UFDouble nbwrastnum = list.getJSONObject(c).getString("nbwrastnum")==null?null:new UFDouble(list.getJSONObject(c).getString("nbwrastnum"));
+					String batchcode = list.getJSONObject(c).getString("batchcode")==null?"null":list.getJSONObject(c).getString("batchcode");
+					String vbatchcodenote = list.getJSONObject(c).getString("vbatchcodenote")==null?"null":list.getJSONObject(c).getString("vbatchcodenote");
+					String cstateid = list.getJSONObject(c).getString("cstateid")==null?"null":list.getJSONObject(c).getString("cstateid");
+					if(cfirstbillbid.equals(cmoid)) {
+						if(sendmap.get(c)!=null)
+							continue;
+						pbvs[q].setNassistnum(pbvs[q].getNshouldassistnum());
+						pbvs[q].setNnum(pbvs[q].getNshouldnum());
+						pbvs[q].setVbatchcode(batchcode);
+						pbvs[q].setPk_batchcode(queryPK_batchcode(batchcode,pbvs[q].getCmaterialoid()));
+						pbvs[q].setVbatchcodenote(vbatchcodenote);
+						pbvs[q].setCstateid(cstateid);
+						pbvs[q].setBreworkflag(Breworkflag);
+//							pbv.setCstateid("1001A210000000070OZ8");  //åº“å­˜çŠ¶æ€
+						pbvs[q].setCbodywarehouseid(cwarehouseid);
+						pbvs[q].setDproducedate(dmakedate_d);
+						pbvs[q].setDbizdate(dmakedate_d);
+						pbvs[q].setDvalidate(getDvalidate(pbvs[q].getCmaterialoid(),pv.getHead().getPk_org(),dmakedate_d));
+						pbvs[q].setStatus(VOStatus.NEW);
+						sqllist.add("update mm_mo m set m.ninnum=(select sum(fb.nnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' "
+								+ "and fb.dr=0),m.ninastnum=(select sum(fb.nassistnum) from ic_finprodin_b fb where fb.fproductclass=1 and fb.cfirstbillbid='"+cmoid+"' and fb.dr=0) where m.cmoid='"+cmoid+"'");
+						sendmap.put(c, c);
+						break;
+					}
+
+				}
+			}
+			FP_origin = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, pv, null, null);
+			for(int g=0;g<sqllist.size();g++)
+				dao.executeUpdate(sqllist.get(g));
+			successMessage = "NCäº§æˆå“å…¥åº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")) {
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				pfaction.processAction("SIGN", "46", null, FP_origin[0],null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+			rewriteWr(WV[0].getParentVO().getPk_wr());
+			returnJson.setResultBillcode(FP_origin[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(FP_origin!=null&&FP_origin.length>0){
+				String pk = FP_origin[0].getParentVO().getCgeneralhid();
+				FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "46", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+			if(WV!=null&&WV.length>0){
+				String pk = WV[0].getParentVO().getPk_wr();
+				AggWrVO errorVo = IQ.querySingleBillByPk(AggWrVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+					if(errorVo!=null) {
+						pfaction.processAction("UNAPPROVE", "55A4", null, errorVo, null, null);
+						pfaction.processAction("DELETE", "55A4", null, errorVo, null, null);
+					}
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	//å›å†™å®Œå·¥å…¥åº“çš„å…¥åº“ä¸»æ•°é‡
+	private void rewriteWr(String pk_wr) throws Exception{
+		String sql ="select q.pk_wr_quality from mm_wr_product p inner join mm_wr_quality q on p.pk_wr_product=q.pk_wr_product_q where p.pk_wr='"+pk_wr+"' and p.dr=0 and q.dr=0";
+		List<Object[]> results = (List<Object[]>) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql, new ArrayListProcessor());
+		if (results != null && results.size() > 0){
+			for(int k=0;k<results.size();k++){
+				String pk_wr_quality = String.valueOf(results.get(k)[0]);
+				String sql2 = "update mm_wr_quality q set q.nginnum=q.ngnum, q.nginastnum=q.ngastnum where q.pk_wr_quality='"+pk_wr_quality+"'";
+				dao.executeUpdate(sql2);
+			}
+		}
+	}
+
+	public JSONString Generate46_NS(JSONObject jsonAy) {
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
+		returnvo returnJson = new returnvo();
+		String successMessage = "";
+		FinProdInVO[] result = null;
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+		try {
+			String wmsID = jsonAy.getString("wmsID");
+			if(wmsID!=null) {
+				String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
+				String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
+				if(wmsflag!=null) {
+					returnJson.setResultBillcode(wmsflag);
+					returnJson.setReturnMessage("NCäº§æˆå“å…¥åº“å•ä¿å­˜å¹¶ç­¾å­—æˆåŠŸï¼");
+					returnJson.setStatus("1");
+					return RestUtils.toJSONString(returnJson);
+//							throw new Exception("IDä¸º"+wmsID+"çš„WMSå•æ®å·²åœ¨NCç”Ÿæˆè¿‡äº§æˆå“å…¥åº“å•ï¼Œé‡å¤æ¨å•ï¼Œè¯·æ£€æŸ¥ï¼");
+				}
+			}
+			String userID = jsonAy.getString("userID");  //åˆ¶å•äººID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººID
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
 			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
 			String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-			if(pk_org==null)
-				throw new Exception("³ö¿â²Ö¿âID"+outWarehouseid+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String pk_org2 = (String)dao.executeQuery("select s.pk_org from bd_stordoc s where s.pk_stordoc='"+inWarehouseid+"'", new ColumnProcessor());
-			if(pk_org2==null)
-				throw new Exception("Èë¿â²Ö¿âID"+inWarehouseid+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
- 			
- 			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);			
-			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
- 			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
- 			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
- 			
- 			WhsTransBillVO billvo = new WhsTransBillVO();
- 			WhsTransBillHeaderVO head = new WhsTransBillHeaderVO();
- 			head.setPk_group(pk_group);
- 			head.setVtrantypecode("4K-01");
- 			head.setCtrantypeid("0001A110000000002DYV");
- 			head.setBillmaker(cuserid);//ÖÆµ¥ÈË
- 			head.setFbillflag(1);
- 			head.setCreator(cuserid);
- 			head.setVnote(jsonAy.getString("vnote"));
 
- 			head.setCwarehouseid(outWarehouseid);   //³ö¿â²Ö¿â
- 			head.setPk_org(pk_org);
- 			head.setPk_org_v(pk_org_v);
- 			head.setCorpoid(pk_org);
- 			head.setCorpvid(pk_org_v);
- 			head.setVdef1("Y");  //ÓÉWMSÉú³É±êÊ¶
- 			head.setStatus(VOStatus.NEW);
- 			head.setCotherwhid(inWarehouseid);  //Èë¿â²Ö¿â
- 			if(null!=jsonAy.get("outDptid")){//³ö¿â²¿ÃÅ
- 				head.setCdptid(jsonAy.getString("outDptid"));
- 				String cdptvid = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("outDptid")+"'", new ColumnProcessor());
- 				head.setCdptvid(cdptvid);
- 			}
- 			String cauditorid = cuserid;
- 			if(null!=jsonAy.get("cbizid")){//³ö¿âÒµÎñÔ±
- 				String ckywy = jsonAy.getString("cbizid");
- 				head.setCbizid(ckywy);
- 				String sql_cauditorid = "select u.cuserid from sm_user u where u.pk_psndoc='"+ckywy+"'";
-  	 			cauditorid = (String) dao.executeQuery(sql_cauditorid, new ColumnProcessor());
-  	 			if(cauditorid==null)
-  	 				throw new Exception("³ö¿âÒµÎñÔ±(×ª³öÈË)"+ckywy+"Î´ÓĞNCÕËºÅ»òÕßNCÕËºÅÎ´°ó¶¨Éí·İÈËÔ±£¬Çë¼ì²é£¡");
-  	 			head.setCauditorid(cauditorid);  //×ª³öÈË
- 			}
- 			
- 			if(null!=jsonAy.get("inDptid")){//Èë¿â²¿ÃÅ
- 				head.setCotherdptid(jsonAy.getString("inDptid"));
- 				String cdptvid2 = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("inDptid")+"'", new ColumnProcessor());
- 				head.setCotherdptvid(cdptvid2);
- 			}
- 			String vadjuster = cuserid;
- 			if(null!=jsonAy.get("cotherbizid")){//Èë¿âÒµÎñÔ±
- 				String rkywy = jsonAy.getString("cotherbizid");
- 				head.setCotherbizid(jsonAy.getString("cotherbizid"));
-  				String sql_vadjuster = "select u.cuserid from sm_user u where u.pk_psndoc='"+rkywy+"'";
-  	 			vadjuster = (String) dao.executeQuery(sql_vadjuster, new ColumnProcessor());
-  	 			if(vadjuster==null)
-  	 				throw new Exception("Èë¿âÒµÎñÔ±(×ªÈëÈË)"+rkywy+"Î´ÓĞNCÕËºÅ»òÕßNCÕËºÅÎ´°ó¶¨Éí·İÈËÔ±£¬Çë¼ì²é£¡");
-  	 			head.setVadjuster(vadjuster);  //×ªÈëÈË
- 			}
- 			//Ó¦µ½»õÈÕÆÚ
- 			if(null !=jsonAy.get("arrivedate")){
- 				head.setDshldarrivedate(new UFDate(jsonAy.getString("arrivedate")));
- 			}else{
- 				head.setDshldarrivedate(new UFDate());
- 			}
- 			//Ó¦·¢»õÈÕÆÚ 
- 			if(null !=jsonAy.get("diliverdate")){
- 				head.setDshlddiliverdate(new UFDate(jsonAy.getString("diliverdate")));
- 			}else
- 				head.setDshlddiliverdate(new UFDate());
- 			
- 			//¹¹Ôì±íÍ· end 
- 			//¹¹Ôì±íÌå start 
- 			JSONArray bodyitems = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
- 			List<WhsTransBillBodyVO > bodyvolist = new ArrayList<WhsTransBillBodyVO>();
- 			int crowno = 1;
-// 			for (Object objbillitem : bodyitems) {
- 			for (int r=0;r<bodyitems.size();r++) {
-// 				JSONObject billitem = (JSONObject) objbillitem;
- 				WhsTransBillBodyVO bodyvo = new WhsTransBillBodyVO();
- 				bodyvo.setCorpoid(pk_org);
- 				bodyvo.setCorpvid(pk_org_v);
- 				String cmaterialoid = bodyitems.getJSONObject(r).getString("cmaterialoid");  //ÎïÁÏid
- 				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
+//					String ctrantypeCode = jsonAy.getString("ctrantypeCode");  //å‡ºå…¥åº“ç±»å‹ç¼–ç 
+			String cbizid = jsonAy.getString("cbizid");  //ä¸šåŠ¡å‘˜ID
+			String cwhsmanagerid = jsonAy.getString("cwhsmanagerid");  //åº“ç®¡å‘˜ID
+			String pk_dept = jsonAy.getString("pk_dept");  //ç”Ÿäº§éƒ¨é—¨ID
+			String pk_dept_v = queryOne("select v.pk_vid from org_dept_v v where v.pk_dept='"+pk_dept+"'");
+			if(pk_dept!=null&&pk_dept_v==null)
+				throw new Exception("éƒ¨é—¨ID"+pk_dept+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+//					String sql_trantype = "select t.pk_billtypeid from bd_billtype t where t.pk_billtypecode='"+ctrantypeCode+"' and t.pk_group='"+groupId+"'";
+//					String ctrantypeid = (String) NCLocator.getInstance().lookup(IUAPQueryBS.class).executeQuery(sql_trantype, new ColumnProcessor());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+			FinProdInVO mvo = new FinProdInVO();
+			FinProdInHeadVO hvo= new FinProdInHeadVO();
+
+			hvo.setCwarehouseid(cwarehouseid);
+			hvo.setCbizid(cbizid);
+			hvo.setCdptid(pk_dept);
+			hvo.setCdptvid(pk_dept_v);
+			hvo.setCorpoid(pk_org);
+			hvo.setCorpvid(pk_org_v);
+			hvo.setCprocalbodyoid(pk_org);
+			hvo.setCprocalbodyvid(pk_org_v);
+			hvo.setCprowarehouseid(cwarehouseid);
+			hvo.setVdef1(wmsID);
+
+			hvo.setCtrantypeid("0001A110000000002DXT");
+			hvo.setCwhsmanagerid(cwhsmanagerid);
+			hvo.setFbillflag(2);
+			hvo.setIprintcount(0);
+			hvo.setPk_group(pk_group);
+			hvo.setPk_org(pk_org);
+			hvo.setPk_org_v(pk_org_v);
+			hvo.setVtrantypecode("46-01");
+			hvo.setVnote(vnote);
+			hvo.setStatus(VOStatus.NEW);
+			mvo.setParentVO(hvo);
+			FinProdInBodyVO[] MBV = new FinProdInBodyVO[list.size()];
+			for (int s=0;s<list.size();s++){
+				String cmaterialoid = list.getJSONObject(s).getString("cmaterialoid");  //ç‰©æ–™id
+				String ccostobject = list.getJSONObject(s).getString("ccostobject");  //æˆæœ¬å¯¹è±¡ï¼ˆäº§æˆå“IDï¼‰
+//						String cprodprojectid = list.getJSONObject(s).getString("cprodprojectid");  //äº§æˆå“è¾…åŠ©å±æ€§-é¡¹ç›®
+//						String cprojectid = list.getJSONObject(s).getString("cprojectid");  //é¡¹ç›®
+//						String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //å·¥ä½œä¸­å¿ƒ
+				String vbatchcode = list.getJSONObject(s).getString("vbatchcode");  //æ‰¹æ¬¡å·
+				if(vbatchcode!=null) {
+					byte[] bytes = vbatchcode.getBytes("GBK");
+					vbatchcode = new String(bytes, "GBK");
+				}
+				String clocationCode = list.getJSONObject(s).getString("clocationCode")==null?"null":list.getJSONObject(s).getString("clocationCode");  //è´§ä½ç¼–ç 
+				String clocationid = GetLocationid(cwarehouseid,clocationCode);
+				String vproductbatch = list.getJSONObject(s).getString("vproductbatch");  //ç”Ÿäº§è®¢å•å·
+				String cstateid = list.getJSONObject(s).getString("cstateid");  //åº“å­˜çŠ¶æ€
+				String cworkcenterid = list.getJSONObject(s).getString("cworkcenterid");  //å·¥ä½œä¸­å¿ƒ
+//						String vskucode = list.getJSONObject(s).getString("vskucode")==null?"":list.getJSONObject(s).getString("vskucode");  //ç‰¹å¾ç 
+				UFDouble nnum = list.getJSONObject(s).getString("nnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nnum"));   //ä¸»æ•°é‡
+				UFDouble nassistnum = list.getJSONObject(s).getString("nassistnum")==null?null:new UFDouble(list.getJSONObject(s).getString("nassistnum"));	//è¾…æ•°é‡
+				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
 						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
 				HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
 				String castunitid = "";
 				String pk_source = "";
 				String zdw = "";
 				String measrate = "";
-				String clocationid = bodyitems.getJSONObject(r).getString("clocationid");  //»õÎ»id
 				if(materialMap!=null&&materialMap.get("zdw")!=null){
 					castunitid=materialMap.get("pk_measdoc")==null?materialMap.get("zdw").toString():materialMap.get("pk_measdoc").toString();
 					pk_source=materialMap.get("pk_source").toString();
 					zdw=materialMap.get("zdw").toString();
 					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
 				}else
-					throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-				
- 				bodyvo.setCmaterialoid(cmaterialoid);
- 				bodyvo.setCmaterialvid(pk_source);
- 				bodyvo.setCunitid(zdw);
- 				bodyvo.setCbodywarehouseid(outWarehouseid);
- 				bodyvo.setCastunitid(castunitid);
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+//						MaterialOutBodyVO bvo = MBV[s];
+				FinProdInBodyVO bvo = new FinProdInBodyVO();
+				bvo.setBbarcodeclose(UFBoolean.FALSE);
+				bvo.setBcseal(UFBoolean.FALSE);
+				bvo.setBonroadflag(UFBoolean.FALSE);
+				bvo.setBreworkflag(UFBoolean.FALSE);
+				bvo.setCastunitid(castunitid);
+				bvo.setCbodytranstypecode("46-01");
+				bvo.setCbodywarehouseid(cwarehouseid);
+				bvo.setCmaterialoid(cmaterialoid);
+				bvo.setCmaterialvid(pk_source);
+				bvo.setCorpoid(pk_org);
+				bvo.setCorpvid(pk_org_v);
+				bvo.setCproductid(ccostobject);
+				bvo.setCrowno(String.valueOf(s)+"0");
+				bvo.setCstateid(cstateid);
+				bvo.setCunitid(zdw);
+				bvo.setCworkcenterid(cworkcenterid);
+				bvo.setFlargess(UFBoolean.FALSE);
+				bvo.setFproductclass(1);
+				bvo.setNassistnum(nassistnum);
+				bvo.setNnum(nnum);
+				bvo.setNshouldassistnum(nassistnum);
+				bvo.setNshouldnum(nnum);
+				bvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
+				bvo.setPk_group(pk_group);
+				bvo.setPk_org(pk_org);
+				bvo.setPk_org_v(pk_org_v);
+				bvo.setVbatchcode(vbatchcode);
+				bvo.setVchangerate(measrate);
+				bvo.setVproductbatch(vproductbatch);
+				bvo.setDproducedate(dmakedate_d);
+				bvo.setDbizdate(dmakedate_d);
+				bvo.setDvalidate(getDvalidate(cmaterialoid,pk_org,dmakedate_d));
+				bvo.setClocationid(clocationid);
+				MBV[s] = bvo;
+				MBV[s].setStatus(VOStatus.NEW);
+			}
+
+			mvo.setChildrenVO(MBV);
+			result = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, mvo, null, null);
+			successMessage = "NCäº§æˆå“å…¥åº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")){
+				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				FinProdInVO[] result2 = (FinProdInVO[])pfaction.processAction("SIGN", "46", null, result[0], null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+
+			returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(result!=null&&result.length>0){
+				String pk = result[0].getParentVO().getCgeneralhid();
+				FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//							InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "46", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Generate46_oth(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		String successMessage = "";
+		FinProdInVO[] FP_origin = null;
+		AggWrVO[] WV = null;
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+		IPwrMaintainService IPM = (IPwrMaintainService) NCLocator.getInstance().lookup(IPwrMaintainService.class);
+		IPMOBusinessService PmoService = (IPMOBusinessService) NCLocator.getInstance().lookup(IPMOBusinessService.class);
+		try {
+			String wmsID = jsonAy.getString("wmsID");
+			if(wmsID!=null) {
+				String sql_wmsid = "select h.vbillcode from ic_finprodin_h h where h.vdef1='"+wmsID+"' and h.dr=0";
+				String wmsflag = (String) dao.executeQuery(sql_wmsid, new ColumnProcessor());
+				if(wmsflag!=null) {
+					returnJson.setResultBillcode(wmsflag);
+					returnJson.setReturnMessage("NCäº§æˆå“å…¥åº“å•ä¿å­˜å¹¶ç­¾å­—æˆåŠŸï¼");
+					returnJson.setStatus("1");
+					return RestUtils.toJSONString(returnJson);
+//						throw new Exception("IDä¸º"+wmsID+"çš„WMSå•æ®å·²åœ¨NCç”Ÿæˆè¿‡äº§æˆå“å…¥åº“å•ï¼Œé‡å¤æ¨å•ï¼Œè¯·æ£€æŸ¥ï¼");
+				}
+			}
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+//				String replenishflag = jsonAy.getString("replenishflag");  //æ˜¯å¦é€€åº“
+//				UFBoolean replenishflag2 = UFBoolean.FALSE;
+//				if(replenishflag!=null&&replenishflag.equals("Y"))
+//					replenishflag2 = UFBoolean.TRUE;
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			String cpmohid = jsonAy.getString("cpmohid");  //ç”Ÿäº§è®¢å•ID
+			String scddlx = queryOne("select h.ctrantypeid from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //ç”Ÿäº§è®¢å•ç±»å‹
+			String scddlxbm = queryOne("select h.vtrantypecode from mm_pmo h where h.cpmohid='"+cpmohid+"'");  //è®¢å•äº¤æ˜“ç±»å‹ç¼–ç 
+			String cplanoutputid = jsonAy.getString("cplanoutputid");  //å‰¯äº§å“è¡¨ä½“ID
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			String sql_group = "select p.pk_group from mm_pmo p where p.cpmohid='"+cpmohid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+
+			String scbgCode = getTransformCode(pk_group, "55A4", scddlxbm);//ç”Ÿäº§æŠ¥å‘Šç±»å‹code
+			if(scbgCode == null) {
+				throw new Exception("æ²¡æœ‰æ‰¾åˆ°æµç¨‹ç”Ÿäº§è®¢å•ç±»å‹ï¼š" + scddlxbm + "å¯¹åº”çš„ç”Ÿäº§æŠ¥å‘Šç±»å‹å…³ç³»");
+			}
+			String ccprkCode = getTransformCode(pk_group, "46", scbgCode);//åº“å­˜äº§æˆå“å…¥åº“ç±»å‹code
+			if(ccprkCode == null) {
+				throw new Exception("æ²¡æœ‰æ‰¾åˆ°ç”Ÿäº§æŠ¥å‘Šç±»å‹ï¼š" + scbgCode + "å¯¹åº”çš„åº“å­˜äº§æˆå“å…¥åº“å•ç±»å‹å…³ç³»");
+			}
+
+			UFDouble nbwrastnum = jsonAy.getString("nbwrastnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrastnum"));  //å®Œå·¥æ•°é‡
+			UFDouble nbwrnum = jsonAy.getString("nbwrnum")==null?UFDouble.ZERO_DBL:new UFDouble(jsonAy.getString("nbwrnum"));  //å®Œå·¥ä¸»æ•°é‡
+			String batchcode = jsonAy.getString("batchcode");  //å…¥åº“æ‰¹æ¬¡å·
+			String vbatchcodenote = jsonAy.getString("vbatchcodenote");  //æ‰¹æ¬¡å¤‡æ³¨
+			String cstateid = jsonAy.getString("cstateid");
+			String[] pks = {cpmohid};
+			//IPMOQueryService
+			IPMOQueryService IPQ = (IPMOQueryService) NCLocator.getInstance().lookup(IPMOQueryService.class);
+			AbstractBill[] PV=(AbstractBill[])IPQ.queryByPks(pks);
+			if (PV==null||PV.length==0){
+				throw new Exception("ä¼ è¾“çš„ç”Ÿäº§è®¢å•IDåœ¨ç³»ç»Ÿä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
+			}
+			PMOAggVO pmovo = (PMOAggVO)PV[0];
+			PMOAggVO[] pmos = {pmovo};
+			PMOItemVO[] piv = (PMOItemVO[])PV[0].getChildrenVO();
+			List<PMOItemVO> bodylist = new ArrayList();
+			List<PMOPlanOutputVO> opv = new ArrayList();
+			String fitemstatus = String.valueOf(piv[0].getAttributeValue("fitemstatus"));
+			if(fitemstatus.equals("4")) {
+				PmoService.put(pmos);
+			}
+			for(int w=0;w<piv.length;w++) {
+				PMOPlanOutputVO[] ppos = piv[w].getPlanoutputs();
+				if(ppos==null)
+					continue;
+				for(int r=0;r<ppos.length;r++) {
+					String pid = ppos[r].getCplanoutputid();
+					if(cplanoutputid.equals(pid)) {
+						opv.add(ppos[r]);
+						bodylist.add(piv[w]);
+					}
+				}
+			}
+			if(opv==null||opv.size()==0)
+				throw new Exception("ä¼ è¾“çš„è”å¹…äº§å“IDåœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			PV[0].setChildrenVO(bodylist.toArray(new PMOItemVO[bodylist.size()]));
+			WV = (AggWrVO[])PfUtilTools.runChangeDataAry("55A2","55A4", PV);
+			WV[0].getParentVO().setFbillstatus(1);
+			WrItemVO[] WI = WV[0].getChildrenVO();
+			PMOPlanOutputVO lfcpvo = opv.get(0);
+
+			WI[0].setVbrowno("10");
+			WI[0].setCbastunitid(lfcpvo.getCastunitid());
+			WI[0].setCbbomversionid("~");
+			WI[0].setCbmainbomid("");
+			WI[0].setCbmaterialid(lfcpvo.getCmaterialid());
+			WI[0].setCbmaterialvid(lfcpvo.getCmaterialvid());
+			WI[0].setCbmobid(lfcpvo.getCplanoutputid());
+			WI[0].setCbworkmanid("~");
+			WI[0].setFbproducttype(lfcpvo.getFoutputtype());
+			WI[0].setNbwrastnum(nbwrastnum);
+			WI[0].setNbwrnum(nbwrnum);
+			WI[0].setVbinbatchcode(batchcode);
+			WI[0].setVbbomversioncode("");
+			WI[0].setVbfirstrowid(lfcpvo.getCplanoutputid());
+			WI[0].setVbsrcrowid(lfcpvo.getCplanoutputid());
+			WI[0].setTbstarttime(new UFDateTime(System.currentTimeMillis()));
+			WI[0].setTbendtime(new UFDateTime(System.currentTimeMillis()+1));
+			WV = IPM.insert(WV);
+			AggWrVO[] WV2 = (AggWrVO[])pfaction.processAction("APPROVE", "55A4", null, WV[0], null, null);
+//				FinProdInVO[] pv = (FinProdInVO[])pfaction.processAction("55A4", "46", null, WV2[0], null, null);
+			FinProdInVO pv = (FinProdInVO)PfUtilTools.runChangeData("55A4", "46", WV2[0]);
+			pv.getHead().setStatus(VOStatus.NEW);
+			pv.getHead().setCwarehouseid(cwarehouseid);
+			pv.getHead().setCprowarehouseid(cwarehouseid);
+			pv.getHead().setVtrantypecode("46-01");
+			pv.getHead().setCtrantypeid("0001A110000000002DXT");
+			pv.getHead().setVdef1(wmsID);
+			FinProdInBodyVO pbv = pv.getBody(0);
+
+			String ccprkId = getBillTypeId(pk_group, "46", ccprkCode);
+			if(scddlx!=null&&scddlx.equals("0001A110000000002DZI")) {  //å½“ç”Ÿäº§è®¢å•ç±»å‹ä¸ºè¿”å·¥æµç¨‹ç”Ÿäº§è®¢å•æ—¶ï¼Œäº§æˆå“å…¥åº“ä¹Ÿè®¾ä¸ºè¯¥ç±»å‹
+				pbv.setBreworkflag(UFBoolean.TRUE);
+			}
+			pv.getHead().setVtrantypecode(ccprkCode);
+			pv.getHead().setCtrantypeid(ccprkId);
+
+			String zcp = queryOne("select o.cmaterialid from mm_mo_planoutput p inner join mm_mo o on p.cmoid=o.cmoid where p.cplanoutputid='"+lfcpvo.getCplanoutputid()+"'");
+			pbv.setNassistnum(pbv.getNshouldassistnum());
+			pbv.setNnum(pbv.getNshouldnum());
+			pbv.setVbatchcode(batchcode);
+			pbv.setPk_batchcode(queryPK_batchcode(batchcode,pbv.getCmaterialoid()));
+			pbv.setVbatchcodenote(vbatchcodenote);
+			pbv.setCstateid(cstateid);
+
+			pbv.setCproductid(zcp);
+//				pbv.setCstateid("1001A210000000070OZ8");  //åº“å­˜çŠ¶æ€
+			pbv.setCbodywarehouseid(cwarehouseid);
+			pbv.setDproducedate(dmakedate_d);
+			pbv.setDbizdate(dmakedate_d);
+			pbv.setDvalidate(getDvalidate(pbv.getCmaterialoid(),pv.getHead().getPk_org(),dmakedate_d));
+			pbv.setStatus(VOStatus.NEW);
+			FP_origin = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, pv, null, null);
+			successMessage = "NCäº§æˆå“å…¥åº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")) {
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				pfaction.processAction("SIGN", "46", null, FP_origin[0],null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+			returnJson.setResultBillcode(FP_origin[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(FP_origin!=null&&FP_origin.length>0){
+				String pk = FP_origin[0].getParentVO().getCgeneralhid();
+				FinProdInVO errorVo = IQ.querySingleBillByPk(FinProdInVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "46", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+			if(WV!=null&&WV.length>0){
+				String pk = WV[0].getParentVO().getPk_wr();
+				AggWrVO errorVo = IQ.querySingleBillByPk(AggWrVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("UNAPPROVE", "55A4", null, errorVo, null, null);
+					pfaction.processAction("DELETE", "55A4", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Generate4Y(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		Map ret = new HashMap();
+		TransOutVO[] result = null;
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String pkOders = jsonAy.getString("cbillid");  //è°ƒæ‹¨è®¢å•è¡¨å¤´idæ•°ç»„
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“id
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+			String[] pks = null;
+			if (pkOders != null && pkOders.length()>2){
+				pkOders = pkOders.substring(1, pkOders.length()-1);
+				pks = pkOders.split(",");
+			}else
+				throw new Exception("è°ƒæ‹¨è®¢å•IDå±æ€§ä¸ºç©ºï¼Œè¯·æ£€æŸ¥ä¼ è¾“å‚æ•°ï¼");
+			IBillQueryService IBQ = (IBillQueryService)NCLocator.getInstance().lookup(IBillQueryService.class);
+			AbstractBill[] SVO = IBQ.queryAbstractBillsByPks(BillVO.class, pks);
+			if (SVO==null||SVO[0]==null){
+				throw new Exception("ä¼ è¾“çš„è°ƒæ‹¨è®¢å•IDåœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨");
+			}
+//				for(int s=0;s<SVO.length;s++) {
+//					BillItemVO[] bhis = (BillItemVO[])SVO[s].getChildrenVO();
+//					for(int t=0;t<bhis.length;t++) {
+//						bhis[t].setCoutstordocid(cwarehouseid);
+//					}
+//				}
+			//å•æ®è½¬æ¢
+			TransOutVO[] transOuts = (TransOutVO[])PfUtilTools.runChangeDataAry("5X", "4Y", SVO);
+			for(TransOutVO transOut : transOuts){
+				transOut.getParentVO().setCwarehouseid(cwarehouseid);
+				transOut.getParentVO().setStatus(2);
+				TransOutBodyVO[] bodys = (TransOutBodyVO[]) transOut.getChildrenVO();
+//					TransOutBodyVO[] mbvs = new TransOutBodyVO[list.size()];
+				List<TransOutBodyVO > mbvs = new ArrayList<TransOutBodyVO>();
+				for (int i = 0; i < list.size(); i++){
+					String cbill_bid = list.getJSONObject(i).getString("cbill_bid") == null ? "null" : list.getJSONObject(i).getString("cbill_bid");
+					UFDouble nnum = list.getJSONObject(i).getString("nnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nnum"));
+					UFDouble nastnum = list.getJSONObject(i).getString("nastnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nastnum"));
+					String vbatchcode = list.getJSONObject(i).getString("vbatchcode") == null ? "null" : list.getJSONObject(i).getString("vbatchcode");
+					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
+					String clocationid = GetLocationid(cwarehouseid,clocationCode);
+					String cstateid = list.getJSONObject(i).getString("cstateid");
+//						String cvmivenderid = list.getJSONObject(i).getString("cvmivenderid")==null?"":list.getJSONObject(i).getString("cvmivenderid");  //å¯„å­˜ä¾›åº”å•†id
+
+					//å¾ªç¯åŒ¹é…è¡¨ä½“
+					for (int s = 0; s < bodys.length; s++){
+						//å°†å¯¹åº”çš„ä¸»æ•°é‡ã€æ‰¹æ¬¡å·ç­‰è¿›è¡Œå¡«å……
+						if(cbill_bid.equals(bodys[s].getCsourcebillbid())){
+							bodys[s].setVbatchcode(vbatchcode);
+							bodys[s].setPk_batchcode(queryPK_batchcode(vbatchcode,bodys[s].getCmaterialoid()));
+							bodys[s].setClocationid(clocationid);
+							bodys[s].setDbizdate(new UFDate(dmakedate));
+							bodys[s].setDvalidate(getDvalidate(bodys[s].getCmaterialoid(),transOut.getParentVO().getPk_org(),new UFDate(dmakedate)));
+							bodys[s].setDproducedate(new UFDate(dmakedate));
+							bodys[s].setNassistnum(nastnum);
+							bodys[s].setNnum(nnum);
+							bodys[s].setNshouldassistnum(nastnum);
+							bodys[s].setNshouldnum(nnum);
+							bodys[s].setCstateid(cstateid);
+							TransOutBodyVO newvo = (TransOutBodyVO)bodys[s].clone();
+							newvo.setCrowno(String.valueOf(i)+"0");
+							newvo.setStatus(2);
+							mbvs.add(newvo);
+							break;
+						}
+					}
+				}
+				if(mbvs==null||mbvs.size()==0) {
+					continue;
+				}
+				transOut.setChildrenVO(mbvs.toArray(new TransOutBodyVO[mbvs.size()]));
+				//è°ƒæ‹¨å‡ºåº“å•
+				result = (TransOutVO[])pfaction.processAction("WRITE", "4Y", null, transOut, null, null);
+				String resultBillcode = new String(result[0].getParentVO().getVbillcode());
+
+				String successMessage = "NCè°ƒæ‹¨å‡ºåº“å•ä¿å­˜";
+				if(sighFlag.equals("Y")){
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
+					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+					result = (TransOutVO[]) pfaction.processAction("SIGN", "4Y", null, result[0], null, null);
+					successMessage = successMessage+"å¹¶ç­¾å­—";
+				}
+				successMessage = successMessage+"æˆåŠŸï¼";
+
+				String[] cgeneralhIds = {result[0].getParentVO().getCgeneralhid()};
+//					this.Generate_Media4E(cgeneralhIds,bodys);  //æ”¹äº†æµç¨‹ï¼Œç­¾å­—è‡ªåŠ¨ç”Ÿæˆä¸‹æ¸¸å•æ®äº†ï¼Œæ‰€ä»¥ä¸éœ€åœ¨æ¥å£ç”Ÿæˆ
+//					returnJson.setResultBillcode(resultBillcode);
+//					returnJson.setReturnMessage(successMessage);
+//					returnJson.setStatus("1");
+				ret.put("ResultBillcode", resultBillcode);
+				ret.put("ReturnMessage", successMessage);
+				ret.put("Status","1");
+				ret.put("cgeneralhid",result[0].getParentVO().getCgeneralhid());
+				List<Map> mapList2 = new ArrayList();
+				TransOutBodyVO[] bvos = result[0].getBodys();
+				for(int k=0;k<bvos.length;k++) {
+					String csourcebid = bvos[k].getCsourcebillbid();
+					String cgeneralbid = bvos[k].getCgeneralbid();
+					String Vbatchcode = bvos[k].getVbatchcode();
+					Map map_msv = new HashMap();
+					map_msv.put("cbill_bid", csourcebid);
+					map_msv.put("cgeneralbid", cgeneralbid);
+					map_msv.put("vbatchcode", Vbatchcode);
+					mapList2.add(map_msv);
+				}
+				ret.put("ids",mapList2);
+			}
+		} catch (Exception e) {
+			ret.put("ResultBillcode", "");
+			ret.put("ReturnMessage", e.toString());
+			ret.put("Status","0");
+			if(result!=null&&result.length>0){
+				String pk = result[0].getParentVO().getCgeneralhid();
+				TransOutVO errorVo = IQ.querySingleBillByPk(TransOutVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "4Y", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(ret);
+	}
+
+	public JSONString Generate4E(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		TransInVO[] result = null;
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String cgeneralhids = jsonAy.getString("cgeneralhid");  //è°ƒæ‹¨å‡ºåº“å•è¡¨å¤´idæ•°ç»„
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“id
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			if(pk_group==null)
+				throw new Exception("ä¼ å…¥çš„ä»“åº“ID:"+cwarehouseid+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
+			String[] pks = null;
+			if (cgeneralhids != null && cgeneralhids.length()>2){
+				cgeneralhids = cgeneralhids.substring(1, cgeneralhids.length()-1);
+				pks = cgeneralhids.split(",");
+			}else
+				throw new Exception("è°ƒæ‹¨å‡ºåº“å•IDå±æ€§ä¸ºç©ºï¼Œè¯·æ£€æŸ¥ä¼ è¾“å‚æ•°ï¼");
+			IBillQueryService IBQ = (IBillQueryService)NCLocator.getInstance().lookup(IBillQueryService.class);
+			AbstractBill[] SVO = IBQ.queryAbstractBillsByPks(TransOutVO.class, pks);
+			if (SVO==null||SVO[0]==null){
+				throw new Exception("ä¼ è¾“çš„è°ƒæ‹¨å‡ºåº“å•IDåœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨");
+			}
+			//å•æ®è½¬æ¢
+			TransInVO[] transIns = (TransInVO[])PfUtilTools.runChangeDataAry("4Y", "4E", SVO);
+			for(TransInVO transIn : transIns){
+				transIn.getParentVO().setCwarehouseid(cwarehouseid);
+				transIn.getParentVO().setStatus(2);
+				TransInBodyVO[] bodys = (TransInBodyVO[]) transIn.getChildrenVO();
+				TransInBodyVO[] mbvs = new TransInBodyVO[list.size()];
+				for (int i = 0; i < list.size(); i++){
+					String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid") == null ? "null" : list.getJSONObject(i).getString("cgeneralbid");
+					UFDouble nnum = list.getJSONObject(i).getString("nnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nnum"));
+					UFDouble nastnum = list.getJSONObject(i).getString("nastnum") == null ? null : new UFDouble(list.getJSONObject(i).getString("nastnum"));
+					String vbatchcode = list.getJSONObject(i).getString("vbatchcode") == null ? "null" : list.getJSONObject(i).getString("vbatchcode");
+					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"null":list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
+					String clocationid = GetLocationid(cwarehouseid,clocationCode);
+					String cstateid = list.getJSONObject(i).getString("cstateid");
+// 					String cvmivenderid = list.getJSONObject(i).getString("cvmivenderid")==null?"":list.getJSONObject(i).getString("cvmivenderid");  //å¯„å­˜ä¾›åº”å•†id
+					//å¾ªç¯åŒ¹é…è¡¨ä½“
+					for (int s = 0; s < bodys.length; s++){
+						//å°†å¯¹åº”çš„ä¸»æ•°é‡ã€æ‰¹æ¬¡å·ç­‰è¿›è¡Œå¡«å……
+						if(cgeneralbid.equals(bodys[s].getCsourcebillbid())){
+							bodys[s].setVbatchcode(vbatchcode);
+							bodys[s].setDproducedate(dmakedate_t.getDate());
+							bodys[s].setDvalidate(getDvalidate(bodys[s].getCmaterialoid(),transIn.getParentVO().getPk_org(),new UFDate(dmakedate)));
+							bodys[s].setPk_batchcode(queryPK_batchcode(vbatchcode,bodys[s].getCmaterialoid()));
+							bodys[s].setClocationid(clocationid);
+							bodys[s].setDbizdate(dmakedate_t.getDate());
+							bodys[s].setNassistnum(nastnum);
+							bodys[s].setNnum(nnum);
+							bodys[s].setNshouldassistnum(nastnum);
+							bodys[s].setNshouldnum(nnum);
+							bodys[s].setCstateid(cstateid);
+							mbvs[i] = (TransInBodyVO)bodys[s].clone();
+							mbvs[i].setCrowno(String.valueOf(i)+"0");
+							mbvs[i].setStatus(2);
+							break;
+						}
+					}
+				}
+				if(mbvs[0]==null) {
+					continue;
+				}
+				transIn.setChildrenVO(mbvs);
+				//è°ƒæ‹¨å‡ºåº“å•
+				result = (TransInVO[])pfaction.processAction("WRITE", "4E", null, transIn, null, null);
+				String resultBillcode = result[0].getParentVO().getVbillcode();
+
+				String successMessage = "NCè°ƒæ‹¨å…¥åº“å•ä¿å­˜";
+				if(sighFlag.equals("Y")){
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
+					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+					result = (TransInVO[]) pfaction.processAction("SIGN", "4E", null, result[0], null, null);
+					successMessage = successMessage+"å¹¶ç­¾å­—";
+				}
+				successMessage = successMessage+"æˆåŠŸï¼";
+				returnJson.setResultBillcode(resultBillcode);
+				returnJson.setReturnMessage(successMessage);
+				returnJson.setStatus("1");
+			}
+		} catch (Exception e) {
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(result!=null&&result.length>0){
+				String pk = result[0].getParentVO().getCgeneralhid();
+				TransInVO errorVo = IQ.querySingleBillByPk(TransInVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "4E", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Generate4K(JSONObject jsonAy) {
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
+		//æ„é€ è¡¨å¤´ start
+		returnvo returnJson = new returnvo();
+		String resultpk = "";
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String outWarehouseid = jsonAy.getString("outWarehouseid");  //ä»“åº“id
+			String inWarehouseid = jsonAy.getString("inWarehouseid");
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+outWarehouseid+"'";
+			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
+			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+outWarehouseid+"'";
+			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
+			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
+			String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
+			if(pk_org==null)
+				throw new Exception("å‡ºåº“ä»“åº“ID"+outWarehouseid+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String pk_org2 = (String)dao.executeQuery("select s.pk_org from bd_stordoc s where s.pk_stordoc='"+inWarehouseid+"'", new ColumnProcessor());
+			if(pk_org2==null)
+				throw new Exception("å…¥åº“ä»“åº“ID"+inWarehouseid+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+
+			WhsTransBillVO billvo = new WhsTransBillVO();
+			WhsTransBillHeaderVO head = new WhsTransBillHeaderVO();
+			head.setPk_group(pk_group);
+			head.setVtrantypecode("4K-01");
+			head.setCtrantypeid("0001A110000000002DYV");
+			head.setBillmaker(cuserid);//åˆ¶å•äºº
+			head.setFbillflag(1);
+			head.setCreator(cuserid);
+			head.setVnote(jsonAy.getString("vnote"));
+
+			head.setCwarehouseid(outWarehouseid);   //å‡ºåº“ä»“åº“
+			head.setPk_org(pk_org);
+			head.setPk_org_v(pk_org_v);
+			head.setCorpoid(pk_org);
+			head.setCorpvid(pk_org_v);
+			head.setVdef1("Y");  //ç”±WMSç”Ÿæˆæ ‡è¯†
+			head.setStatus(VOStatus.NEW);
+			head.setCotherwhid(inWarehouseid);  //å…¥åº“ä»“åº“
+			if(null!=jsonAy.get("outDptid")){//å‡ºåº“éƒ¨é—¨
+				head.setCdptid(jsonAy.getString("outDptid"));
+				String cdptvid = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("outDptid")+"'", new ColumnProcessor());
+				head.setCdptvid(cdptvid);
+			}
+			String cauditorid = cuserid;
+			if(null!=jsonAy.get("cbizid")){//å‡ºåº“ä¸šåŠ¡å‘˜
+				String ckywy = jsonAy.getString("cbizid");
+				head.setCbizid(ckywy);
+				String sql_cauditorid = "select u.cuserid from sm_user u where u.pk_psndoc='"+ckywy+"'";
+				cauditorid = (String) dao.executeQuery(sql_cauditorid, new ColumnProcessor());
+				if(cauditorid==null)
+					throw new Exception("å‡ºåº“ä¸šåŠ¡å‘˜(è½¬å‡ºäºº)"+ckywy+"æœªæœ‰NCè´¦å·æˆ–è€…NCè´¦å·æœªç»‘å®šèº«ä»½äººå‘˜ï¼Œè¯·æ£€æŸ¥ï¼");
+				head.setCauditorid(cauditorid);  //è½¬å‡ºäºº
+			}
+
+			if(null!=jsonAy.get("inDptid")){//å…¥åº“éƒ¨é—¨
+				head.setCotherdptid(jsonAy.getString("inDptid"));
+				String cdptvid2 = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("inDptid")+"'", new ColumnProcessor());
+				head.setCotherdptvid(cdptvid2);
+			}
+			String vadjuster = cuserid;
+			if(null!=jsonAy.get("cotherbizid")){//å…¥åº“ä¸šåŠ¡å‘˜
+				String rkywy = jsonAy.getString("cotherbizid");
+				head.setCotherbizid(jsonAy.getString("cotherbizid"));
+				String sql_vadjuster = "select u.cuserid from sm_user u where u.pk_psndoc='"+rkywy+"'";
+				vadjuster = (String) dao.executeQuery(sql_vadjuster, new ColumnProcessor());
+				if(vadjuster==null)
+					throw new Exception("å…¥åº“ä¸šåŠ¡å‘˜(è½¬å…¥äºº)"+rkywy+"æœªæœ‰NCè´¦å·æˆ–è€…NCè´¦å·æœªç»‘å®šèº«ä»½äººå‘˜ï¼Œè¯·æ£€æŸ¥ï¼");
+				head.setVadjuster(vadjuster);  //è½¬å…¥äºº
+			}
+			//åº”åˆ°è´§æ—¥æœŸ
+			if(null !=jsonAy.get("arrivedate")){
+				head.setDshldarrivedate(new UFDate(jsonAy.getString("arrivedate")));
+			}else{
+				head.setDshldarrivedate(new UFDate());
+			}
+			//åº”å‘è´§æ—¥æœŸ
+			if(null !=jsonAy.get("diliverdate")){
+				head.setDshlddiliverdate(new UFDate(jsonAy.getString("diliverdate")));
+			}else
+				head.setDshlddiliverdate(new UFDate());
+
+			//æ„é€ è¡¨å¤´ end
+			//æ„é€ è¡¨ä½“ start
+			JSONArray bodyitems = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			List<WhsTransBillBodyVO > bodyvolist = new ArrayList<WhsTransBillBodyVO>();
+			int crowno = 1;
+// 			for (Object objbillitem : bodyitems) {
+			for (int r=0;r<bodyitems.size();r++) {
+// 				JSONObject billitem = (JSONObject) objbillitem;
+				WhsTransBillBodyVO bodyvo = new WhsTransBillBodyVO();
+				bodyvo.setCorpoid(pk_org);
+				bodyvo.setCorpvid(pk_org_v);
+				String cmaterialoid = bodyitems.getJSONObject(r).getString("cmaterialoid");  //ç‰©æ–™id
+				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
+						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
+				HashMap materialMap = (HashMap) dao.executeQuery(sql_astunit,new MapProcessor());
+				String castunitid = "";
+				String pk_source = "";
+				String zdw = "";
+				String measrate = "";
+				String clocationid = bodyitems.getJSONObject(r).getString("clocationid");  //è´§ä½id
+				if(materialMap!=null&&materialMap.get("zdw")!=null){
+					castunitid=materialMap.get("pk_measdoc")==null?materialMap.get("zdw").toString():materialMap.get("pk_measdoc").toString();
+					pk_source=materialMap.get("pk_source").toString();
+					zdw=materialMap.get("zdw").toString();
+					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
+				}else
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+
+				bodyvo.setCmaterialoid(cmaterialoid);
+				bodyvo.setCmaterialvid(pk_source);
+				bodyvo.setCunitid(zdw);
+				bodyvo.setCbodywarehouseid(outWarehouseid);
+				bodyvo.setCastunitid(castunitid);
 				bodyvo.setVchangerate(measrate);
 				bodyvo.setCstateid(bodyitems.getJSONObject(r).getString("cstateid"));
- 				bodyvo.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
- 				bodyvo.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
- 				//bodyvo.setNassistnum(UFDoubleUtils.div(bodyvo.getNnum() ,numchangerate, 2));//¸¨ÊıÁ¿ 
+				bodyvo.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
+				bodyvo.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
+				//bodyvo.setNassistnum(UFDoubleUtils.div(bodyvo.getNnum() ,numchangerate, 2));//è¾…æ•°é‡
 // 				UFDouble numchangerate =  UFDoubleUtils.div(new UFDouble(bodyvo.getVchangerate().split("/")[0]),new UFDouble(bodyvo.getVchangerate().split("/")[1]));
- 				bodyvo.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));//ĞĞ±¸×¢
- 				bodyvo.setClocationid(clocationid);
- 				bodyvo.setCrowno((10*crowno)+"");
- 				bodyvo.setStatus(VOStatus.NEW);
- 				crowno++;
- 				//Åú´Î´¦Àí start
- 				String vbatchcode = null==bodyitems.getJSONObject(r).get("vbatchcode")?"":bodyitems.getJSONObject(r).getString("vbatchcode");
- 				bodyvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
- 				bodyvo.setVbatchcode(vbatchcode);
-// 				if(!PubAppTool.isNull(vbatchcode)){//¶¼²»Îª¿Õ£¬×éºÏ
+				bodyvo.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));//è¡Œå¤‡æ³¨
+				bodyvo.setClocationid(clocationid);
+				bodyvo.setCrowno((10*crowno)+"");
+				bodyvo.setStatus(VOStatus.NEW);
+				crowno++;
+				//æ‰¹æ¬¡å¤„ç† start
+				String vbatchcode = null==bodyitems.getJSONObject(r).get("vbatchcode")?"":bodyitems.getJSONObject(r).getString("vbatchcode");
+				bodyvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
+				bodyvo.setVbatchcode(vbatchcode);
+// 				if(!PubAppTool.isNull(vbatchcode)){//éƒ½ä¸ä¸ºç©ºï¼Œç»„åˆ
 // 					String ncbatchcode = vbatchcode;
 // 						BatchcodeVO batchvo = querdmo.QueryBatchbyMaterialBatchNO(bodyvo.getCmaterialoid(), ncbatchcode);
 // 						bodyvo.setVbatchcode(ncbatchcode);
@@ -2850,786 +2864,795 @@ public class RestForWMSimpl {
 // 							bodyvo.setCqualitylevelid(batchvo.getCqualitylevelid());
 // 						}
 // 				}
- 				//Åú´Î´¦Àí end
- 				bodyvolist.add(bodyvo);
- 			}
- 			//¹¹Ôì±íÌå end 
- 			
- 			//×éºÏµ¥¾İvo
- 			billvo.setParent(head);
- 			billvo.setChildrenVO(bodyvolist.toArray(new WhsTransBillBodyVO[bodyvolist.size()]));
- 			WhsTransBillVO[] result = (WhsTransBillVO[])pfaction.processAction("WRITE", "4K", null, billvo, null,null);
- 			resultpk = result[0].getParentVO().getCspecialhid();
- 			WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, resultpk);
- 			String billcode = AP.getParentVO().getVbillcode();
+				//æ‰¹æ¬¡å¤„ç† end
+				bodyvolist.add(bodyvo);
+			}
+			//æ„é€ è¡¨ä½“ end
+
+			//ç»„åˆå•æ®vo
+			billvo.setParent(head);
+			billvo.setChildrenVO(bodyvolist.toArray(new WhsTransBillBodyVO[bodyvolist.size()]));
+			WhsTransBillVO[] result = (WhsTransBillVO[])pfaction.processAction("WRITE", "4K", null, billvo, null,null);
+			resultpk = result[0].getParentVO().getCspecialhid();
+			WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, resultpk);
+			String billcode = AP.getParentVO().getVbillcode();
 // 			String billcode = (String)dao.executeQuery("select vbillcode from ic_whstrans_h where cspecialhid='"+resultpk+"'", new ColumnProcessor());
- 			String successMessage = "NC×ª¿âµ¥±£´æ";
+			String successMessage = "NCè½¬åº“å•ä¿å­˜";
 			if(sighFlag.equals("Y")){
-				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
 				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 				result = (WhsTransBillVO[]) pfaction.processAction("APPROVE", "4K", null, AP, null, null);
-				successMessage = successMessage+"²¢Ç©×Ö";
+				successMessage = successMessage+"å¹¶ç­¾å­—";
 			}
 			Form4Kto4I(AP,null,cauditorid,dmakedate_t);
 			From4Kto4A(AP,null,vadjuster,dmakedate_t);
 			dao.executeUpdate("update ic_whstrans_h h set h.cauditorid='"+cauditorid+"',h.vadjuster='"+vadjuster+"' where h.cspecialhid='"+resultpk+"'");
-			successMessage = successMessage+"³É¹¦£¡";
+			successMessage = successMessage+"æˆåŠŸï¼";
 			returnJson.setResultBillcode(billcode);
 			returnJson.setReturnMessage(successMessage);
-			returnJson.setStatus("1");	
- 		} catch (Exception e) {
- 			if(!resultpk.equals("")&&resultpk.length()>0) {
- 				WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, resultpk);
- 				int fbillflag = AP.getParentVO().getFbillflag();
- 				try {
- 					if(fbillflag==4){
- 	 				   pfaction.processAction("UNAPPROVE", "4K", null, AP, null, null);
- 	 				}
- 	 				pfaction.processAction("DELETE", "4K", null, AP, null, null);
- 				}catch (Exception e1) {
- 					e1.printStackTrace();
- 				}
- 				
- 			}	
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 		}
- 		return RestUtils.toJSONString(returnJson);
-     }
-     
-     //×ª¿âÉú³ÉÆäËû³ö¿â
-     private void Form4Kto4I(WhsTransBillVO AP,JSONArray bodyitems,String cauditorid,UFDateTime makedate) throws Exception {
-    	 GeneralOutVO PV = (GeneralOutVO)PfUtilTools.runChangeData("4K", "4I", AP);
-    	 PV.getParentVO().setCtrantypeid("0001A110000000002DYJ");
-    	 PV.getParentVO().setVtrantypecode("4I-02");
-    	 PV.getParentVO().setBillmaker(cauditorid);
-    	 PV.getParentVO().setCreator(cauditorid);
-    	 PV.getParentVO().setApprover(cauditorid);
-//    	 InvocationInfoProxy.getInstance().setUserId(cauditorid);
-    	 GeneralOutBodyVO[] bodys = PV.getBodys();
-    	 ArrayList<GeneralOutBodyVO> oi_new = new ArrayList<GeneralOutBodyVO>();
-    	 if(bodyitems!=null) {
-    		 for (int r=0;r<bodyitems.size();r++) {
-    			 String cspecialbid = bodyitems.getJSONObject(r).getString("cspecialbid");
-    			 for(int i=0;i<bodys.length;i++) {
-    	    		 String sourcebillbid = bodys[i].getCsourcebillbid();
-    	    		 if(sourcebillbid!=null&&sourcebillbid.equals(cspecialbid)) {
-    	    			 GeneralOutBodyVO newitem = (GeneralOutBodyVO)bodys[i].clone();
-    	    			 newitem.setNshouldnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
-    	    			 newitem.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
-    	    			 newitem.setNshouldassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
-    	    			 newitem.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
-    	    			 newitem.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));
-   		  				 String vbatchcode = bodyitems.getJSONObject(r).getString("vbatchcode");
-   		  			     newitem.setPk_batchcode(queryPK_batchcode(vbatchcode,newitem.getCmaterialoid()));
-   		  			     newitem.setVbatchcode(vbatchcode);
-   		  			     newitem.setCstateid(bodyitems.getJSONObject(r).getString("cstateid"));
-    	    			 newitem.setCrowno(String.valueOf(r)+"0");
-    	    			 newitem.setDproducedate(makedate.getDate());
-    	    			 newitem.setDbizdate(makedate.getDate());
-    	    			 newitem.setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),PV.getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));
-    	    			 oi_new.add(newitem);
-    	    		 }
-    	    	 }
-    		 }
-    		 PV.setChildrenVO(oi_new.toArray(new GeneralOutBodyVO[oi_new.size()]));
-    	 }else {
-    		 for(int i=0;i<bodys.length;i++) {
-	    		 bodys[i].setCrowno(String.valueOf(i)+"0");
-	    		 bodys[i].setDproducedate(makedate.getDate());
-	    		 bodys[i].setDbizdate(makedate.getDate());
-	    		 bodys[i].setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),PV.getParentVO().getPk_org(),makedate.getDate()));
-	    	 }
-    	 }
-    	 
-    	 
-    	 GeneralOutVO[] result = (GeneralOutVO[])pfaction.processAction("WRITE", "4I", null, PV, null, null);
-    	 pfaction.processAction("SIGN", "4I", null, result[0], null, null);
-    	 dao.executeUpdate("update ic_generalout_h h set h.approver='"+cauditorid+"' where h.cgeneralhid='"+result[0].getParentVO().getCgeneralhid()+"'");
-    	 dao.executeUpdate("update ia_i7bill h set h.billmaker='"+cauditorid+"',h.creator='"+cauditorid+"',h.modifier='"+cauditorid+"' where h.cbillid in (select b.cbillid from ia_i7bill_b b where b.csrcid='"+result[0].getParentVO().getCgeneralhid()+"' and b.dr=0)");
-     }
-     
-     //×ª¿âÉú³ÉÆäËûÈë¿â
-     private void From4Kto4A(WhsTransBillVO AP,JSONArray bodyitems,String vadjuster,UFDateTime makedate) throws Exception {
-    	 GeneralInVO PV = (GeneralInVO)PfUtilTools.runChangeData("4K", "4A", AP); 
-    	 PV.getParentVO().setCtrantypeid("0001A110000000002DXW");
-    	 PV.getParentVO().setVtrantypecode("4A-02");
-    	 PV.getParentVO().setBillmaker(vadjuster);
-    	 PV.getParentVO().setCreator(vadjuster);
-    	 PV.getParentVO().setApprover(vadjuster);
-//    	 InvocationInfoProxy.getInstance().setUserId(vadjuster);
-    	 String pk_org = PV.getParentVO().getPk_org();
-    	 String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
-		 String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-		 PV.getParentVO().setPk_org_v(pk_org_v);
-    	 GeneralInBodyVO[] bodys = PV.getBodys();
-    	 ArrayList<GeneralInBodyVO> oi_new = new ArrayList<GeneralInBodyVO>();
-    	 if(bodyitems!=null) {
-    		 for (int r=0;r<bodyitems.size();r++) {
-    			 String cspecialbid = bodyitems.getJSONObject(r).getString("cspecialbid");
-    			 for(int i=0;i<bodys.length;i++) {
-    				 String sourcebillbid = bodys[i].getCsourcebillbid();
-    				 if(sourcebillbid!=null&&sourcebillbid.equals(cspecialbid)) {
-    					 GeneralInBodyVO newitem = (GeneralInBodyVO)bodys[i].clone();
-    					 newitem.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
-    					 newitem.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
-    					 newitem.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));
-		  				 String vbatchcode = bodyitems.getJSONObject(r).getString("vbatchcode");
-		  				 newitem.setPk_batchcode(queryPK_batchcode(vbatchcode,newitem.getCmaterialoid()));
-		  				 newitem.setVbatchcode(vbatchcode);
-		  				 newitem.setCstateid(bodyitems.getJSONObject(r).getString("cstateid"));
-    					 newitem.setCrowno(String.valueOf(r)+"0");
-    					 newitem.setDproducedate(makedate.getDate());
-    					 newitem.setDbizdate(makedate.getDate());
-    					 newitem.setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),pk_org,makedate.getDate()));
-                		 oi_new.add(newitem);
-    				 }
-            		 
-            	 }
-    		 }
-    		 PV.setChildrenVO(oi_new.toArray(new GeneralInBodyVO[oi_new.size()]));
-    	 }else {
-    		 for(int i=0;i<bodys.length;i++) {
-        		 bodys[i].setCrowno(String.valueOf(i)+"0");
-        		 bodys[i].setDproducedate(new UFDate(System.currentTimeMillis()));
-        		 bodys[i].setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),pk_org,new UFDate(System.currentTimeMillis())));
-        	 } 
-    	 }
-    	 GeneralInVO[] result = (GeneralInVO[])pfaction.processAction("WRITE", "4A", null, PV, null, null);
-//    	 InvocationInfoProxy.getInstance().setUserId(vadjuster);
-    	 pfaction.processAction("SIGN", "4A", null, result[0], null, null);
-    	 dao.executeUpdate("update ic_generalin_h h set h.approver='"+vadjuster+"' where h.cgeneralhid='"+result[0].getParentVO().getCgeneralhid()+"'");
-    	 dao.executeUpdate("update ia_i4bill h set h.billmaker='"+vadjuster+"',h.creator='"+vadjuster+"',h.modifier='"+vadjuster+"' where h.cbillid in (select b.cbillid from ia_i4bill_b b where b.csrcid='"+result[0].getParentVO().getCgeneralhid()+"' and b.dr=0)");
-     }
-     
-     public JSONString Rewrite4K(JSONObject jsonAy) {
-  		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
-     	returnvo returnJson = new returnvo();
-     	String resultpk = null;
-  		try {
-  			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
-  			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));	
- 			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
- 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
- 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
- 			if(cuserid==null)
- 				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-  			
-  			String updateTime = jsonAy.getString("updateTime");  //ÖÆµ¥ÈÕÆÚ
- 			UFDateTime dmakedate_t = new UFDateTime(updateTime);			
-  			String cspecialhid = jsonAy.getString("cspecialhid");  //×ª¿âµ¥±íÍ·ID
-  			WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, cspecialhid);
-  			WhsTransBillHeaderVO head = AP.getHead();
-  			WhsTransBillBodyVO[] bodys = AP.getBodys();
-  			String pk_group = head.getPk_group();
-  			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-  			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-  			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿	
-  			if(head.getFbillflag()!=1) {
-//  				throw new Exception("×ª¿âµ¥×´Ì¬²»ÊÇÎ´ÉóÅú×´Ì¬£¬Çë¼ì²é£¡");
-  				WhsTransBillVO[] ff = (WhsTransBillVO[])pfaction.processAction("UNAPPROVE", "4K", null, AP, null, null);
-  				AP = ff[0];
-  			}
-  			head.setVdef1("Y");  //ÓÉWMSÉú³É±êÊ¶
-  			head.setVnote(jsonAy.getString("vnote"));
-  			head.setStatus(VOStatus.UPDATED);
-  			if(null!=jsonAy.get("outDptid")){//³ö¿â²¿ÃÅ
-  				head.setCdptid(jsonAy.getString("outDptid"));
-  				String cdptvid = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("outDptid")+"'", new ColumnProcessor());
-  				head.setCdptvid(cdptvid);
-  			}
-  			String cauditorid = cuserid;
-  			if(null!=jsonAy.get("cbizid")){//³ö¿âÒµÎñÔ±
-  				String ckywy = jsonAy.getString("cbizid");
-  				head.setCbizid(ckywy);
-  				String sql_cauditorid = "select u.cuserid from sm_user u where u.pk_psndoc='"+ckywy+"'";
-  	 			cauditorid = (String) dao.executeQuery(sql_cauditorid, new ColumnProcessor());
-  	 			if(cauditorid==null)
-  	 				throw new Exception("³ö¿âÒµÎñÔ±(×ª³öÈË)"+ckywy+"Î´ÓĞNCÕËºÅ»òÕßNCÕËºÅÎ´°ó¶¨Éí·İÈËÔ±£¬Çë¼ì²é£¡");
-  	 			head.setCauditorid(cauditorid);  //×ª³öÈË
-  			}
-  			
-  			if(null!=jsonAy.get("inDptid")){//Èë¿â²¿ÃÅ
-  				head.setCotherdptid(jsonAy.getString("inDptid"));
-  				String cdptvid2 = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("inDptid")+"'", new ColumnProcessor());
-  				head.setCotherdptvid(cdptvid2);
-  			}
-  			String vadjuster = cuserid;
-  			if(null!=jsonAy.get("cotherbizid")){//Èë¿âÒµÎñÔ±
-  				String rkywy = jsonAy.getString("cotherbizid");
-  				head.setCotherbizid(jsonAy.getString("cotherbizid"));
-  				String sql_vadjuster = "select u.cuserid from sm_user u where u.pk_psndoc='"+rkywy+"'";
-  	 			vadjuster = (String) dao.executeQuery(sql_vadjuster, new ColumnProcessor());
-  	 			if(vadjuster==null)
-  	 				throw new Exception("Èë¿âÒµÎñÔ±(×ªÈëÈË)"+rkywy+"Î´ÓĞNCÕËºÅ»òÕßNCÕËºÅÎ´°ó¶¨Éí·İÈËÔ±£¬Çë¼ì²é£¡");
-  	 			head.setVadjuster(vadjuster);  //×ªÈëÈË
-  			}
-  			//Ó¦µ½»õÈÕÆÚ
-  			if(null !=jsonAy.get("arrivedate")){
-  				head.setDshldarrivedate(new UFDate(jsonAy.getString("arrivedate")));
-  			}
-  			//Ó¦·¢»õÈÕÆÚ 
-  			if(null !=jsonAy.get("diliverdate")){
-  				head.setDshlddiliverdate(new UFDate(jsonAy.getString("diliverdate")));
-  			}
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			if(!resultpk.equals("")&&resultpk.length()>0) {
+				WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, resultpk);
+				int fbillflag = AP.getParentVO().getFbillflag();
+				try {
+					if(fbillflag==4){
+						pfaction.processAction("UNAPPROVE", "4K", null, AP, null, null);
+					}
+					pfaction.processAction("DELETE", "4K", null, AP, null, null);
+				}catch (Exception e1) {
+					e1.printStackTrace();
+				}
 
-  			//¹¹Ôì±íÌå start 
-  			JSONArray bodyitems = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-  			for (int r=0;r<bodyitems.size();r++) {
-  				String cspecialbid = bodyitems.getJSONObject(r).getString("cspecialbid");
-  				String clocationid = bodyitems.getJSONObject(r).getString("clocationid");  //»õÎ»id
-  				for(int s=0;s<bodys.length;s++) {
-  					String bpk = bodys[s].getCspecialbid();
-  					if(bpk.equals(cspecialbid)) {
-  						WhsTransBillBodyVO bodyvo = bodys[s];
-  		 				String cmaterialoid = bodyvo.getCmaterialoid();
-  		 				//ÒòÎª×ª¿âÊı¿ÉÄÜ»á³¬¹ı±¸ÁÏÊı£¬Èç¹ûÔÚÕâÀïÉèÖÃ´óÓÚ±¸ÁÏÊıµÄ»°»á±¨´í¡°×ª¿âÊıÁ¿×ÜºÍ²»ºÏ·¨£¬»ØĞ´Ê§°Ü£¡¡±£¬ËùÒÔ×¢ÊÍµô£¬ÔÚÆäËû³öÈë¿â·½·¨ÀïÃæÉèÖÃÊıÁ¿
+			}
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	//è½¬åº“ç”Ÿæˆå…¶ä»–å‡ºåº“
+	private void Form4Kto4I(WhsTransBillVO AP,JSONArray bodyitems,String cauditorid,UFDateTime makedate) throws Exception {
+		GeneralOutVO PV = (GeneralOutVO)PfUtilTools.runChangeData("4K", "4I", AP);
+		PV.getParentVO().setCtrantypeid("0001A110000000002DYJ");
+		PV.getParentVO().setVtrantypecode("4I-02");
+		PV.getParentVO().setBillmaker(cauditorid);
+		PV.getParentVO().setCreator(cauditorid);
+		PV.getParentVO().setApprover(cauditorid);
+//    	 InvocationInfoProxy.getInstance().setUserId(cauditorid);
+		GeneralOutBodyVO[] bodys = PV.getBodys();
+		ArrayList<GeneralOutBodyVO> oi_new = new ArrayList<GeneralOutBodyVO>();
+		if(bodyitems!=null) {
+			for (int r=0;r<bodyitems.size();r++) {
+				String cspecialbid = bodyitems.getJSONObject(r).getString("cspecialbid");
+				for(int i=0;i<bodys.length;i++) {
+					String sourcebillbid = bodys[i].getCsourcebillbid();
+					if(sourcebillbid!=null&&sourcebillbid.equals(cspecialbid)) {
+						GeneralOutBodyVO newitem = (GeneralOutBodyVO)bodys[i].clone();
+						newitem.setNshouldnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
+						newitem.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
+						newitem.setNshouldassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
+						newitem.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
+						newitem.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));
+						String vbatchcode = bodyitems.getJSONObject(r).getString("vbatchcode");
+						newitem.setPk_batchcode(queryPK_batchcode(vbatchcode,newitem.getCmaterialoid()));
+						newitem.setVbatchcode(vbatchcode);
+						newitem.setCstateid(bodyitems.getJSONObject(r).getString("cstateid"));
+						newitem.setCrowno(String.valueOf(r)+"0");
+						newitem.setDproducedate(makedate.getDate());
+						newitem.setDbizdate(makedate.getDate());
+						newitem.setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),PV.getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));
+						oi_new.add(newitem);
+					}
+				}
+			}
+			PV.setChildrenVO(oi_new.toArray(new GeneralOutBodyVO[oi_new.size()]));
+		}else {
+			for(int i=0;i<bodys.length;i++) {
+				bodys[i].setCrowno(String.valueOf(i)+"0");
+				bodys[i].setDproducedate(makedate.getDate());
+				bodys[i].setDbizdate(makedate.getDate());
+				bodys[i].setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),PV.getParentVO().getPk_org(),makedate.getDate()));
+			}
+		}
+
+
+		GeneralOutVO[] result = (GeneralOutVO[])pfaction.processAction("WRITE", "4I", null, PV, null, null);
+		pfaction.processAction("SIGN", "4I", null, result[0], null, null);
+		dao.executeUpdate("update ic_generalout_h h set h.approver='"+cauditorid+"' where h.cgeneralhid='"+result[0].getParentVO().getCgeneralhid()+"'");
+		dao.executeUpdate("update ia_i7bill h set h.billmaker='"+cauditorid+"',h.creator='"+cauditorid+"',h.modifier='"+cauditorid+"' where h.cbillid in (select b.cbillid from ia_i7bill_b b where b.csrcid='"+result[0].getParentVO().getCgeneralhid()+"' and b.dr=0)");
+	}
+
+	//è½¬åº“ç”Ÿæˆå…¶ä»–å…¥åº“
+	private void From4Kto4A(WhsTransBillVO AP,JSONArray bodyitems,String vadjuster,UFDateTime makedate) throws Exception {
+		InvocationInfoProxy.getInstance().setGroupId(AP.getParentVO().getPk_group());
+		GeneralInVO PV = (GeneralInVO)PfUtilTools.runChangeData("4K", "4A", AP);
+		PV.getParentVO().setCtrantypeid("0001A110000000002DXW");
+		PV.getParentVO().setVtrantypecode("4A-02");
+		PV.getParentVO().setBillmaker(vadjuster);
+		PV.getParentVO().setCreator(vadjuster);
+		PV.getParentVO().setApprover(vadjuster);
+//    	 InvocationInfoProxy.getInstance().setUserId(vadjuster);
+		String pk_org = PV.getParentVO().getPk_org();
+		String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
+		String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
+		PV.getParentVO().setPk_org_v(pk_org_v);
+		GeneralInBodyVO[] bodys = PV.getBodys();
+		ArrayList<GeneralInBodyVO> oi_new = new ArrayList<GeneralInBodyVO>();
+		if(bodyitems!=null) {
+			for (int r=0;r<bodyitems.size();r++) {
+				String cspecialbid = bodyitems.getJSONObject(r).getString("cspecialbid");
+				for(int i=0;i<bodys.length;i++) {
+					String sourcebillbid = bodys[i].getCsourcebillbid();
+					if(sourcebillbid!=null&&sourcebillbid.equals(cspecialbid)) {
+						GeneralInBodyVO newitem = (GeneralInBodyVO)bodys[i].clone();
+						newitem.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
+						newitem.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
+						newitem.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));
+						String vbatchcode = bodyitems.getJSONObject(r).getString("vbatchcode");
+						newitem.setPk_batchcode(queryPK_batchcode(vbatchcode,newitem.getCmaterialoid()));
+						newitem.setVbatchcode(vbatchcode);
+						newitem.setCstateid(bodyitems.getJSONObject(r).getString("cstateid"));
+						newitem.setCrowno(String.valueOf(r)+"0");
+						newitem.setDproducedate(makedate.getDate());
+						newitem.setDbizdate(makedate.getDate());
+						newitem.setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),pk_org,makedate.getDate()));
+						newitem.setBbarcodeclose(UFBoolean.FALSE);
+						newitem.setBhasiabill(UFBoolean.FALSE);
+						newitem.setBonroadflag(UFBoolean.FALSE);
+						newitem.setTsourcebodyts(null);
+						newitem.setTsourceheadts(null);
+						oi_new.add(newitem);
+					}
+
+				}
+			}
+			PV.setChildrenVO(oi_new.toArray(new GeneralInBodyVO[oi_new.size()]));
+		}else {
+			for(int i=0;i<bodys.length;i++) {
+				bodys[i].setCrowno(String.valueOf(i)+"0");
+				bodys[i].setDproducedate(new UFDate(System.currentTimeMillis()));
+				bodys[i].setDvalidate(getDvalidate(bodys[i].getCmaterialoid(),pk_org,new UFDate(System.currentTimeMillis())));
+			}
+		}
+		GeneralInVO[] result = (GeneralInVO[])pfaction.processAction("WRITE", "4A", null, PV, null, null);
+		pfaction.processAction("SIGN", "4A-02", null, result[0], null, null);
+		dao.executeUpdate("update ic_generalin_h h set h.approver='"+vadjuster+"' where h.cgeneralhid='"+result[0].getParentVO().getCgeneralhid()+"'");
+		dao.executeUpdate("update ia_i4bill h set h.billmaker='"+vadjuster+"',h.creator='"+vadjuster+"',h.modifier='"+vadjuster+"' where h.cbillid in (select b.cbillid from ia_i4bill_b b where b.csrcid='"+result[0].getParentVO().getCgeneralhid()+"' and b.dr=0)");
+		//åˆ¤æ–­å½“å­˜è´§æ ¸ç®—çš„å…¶ä»–å…¥åº“çš„ ccalcid å­—æ®µä¸ºç©ºæ—¶ï¼Œé‡æ–°å–å€¼   20250213
+		dao.executeUpdate("update ia_i4bill_b b set b.ccalcid=(select gb.csourcebillbid from ic_generalin_b gb where gb.cgeneralbid=b.csrcbid) "
+				+ "where exists (select gb.csourcebillbid from ic_generalin_b gb where gb.cgeneralbid=b.csrcbid) and (ccalcid is null or ccalcid='~') "
+				+ "and cbillid in (select b.cbillid from ia_i4bill_b b where b.csrcid='"+result[0].getParentVO().getCgeneralhid()+"' and b.dr=0)");
+	}
+
+	public JSONString Rewrite4K(JSONObject jsonAy) {
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
+		returnvo returnJson = new returnvo();
+		String resultpk = null;
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
+			String updateTime = jsonAy.getString("updateTime");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(updateTime);
+			String cspecialhid = jsonAy.getString("cspecialhid");  //è½¬åº“å•è¡¨å¤´ID
+			WhsTransBillVO AP = IQ.querySingleBillByPk(WhsTransBillVO.class, cspecialhid);
+			WhsTransBillHeaderVO head = AP.getHead();
+			WhsTransBillBodyVO[] bodys = AP.getBodys();
+			String pk_group = head.getPk_group();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+			if(head.getFbillflag()!=1) {
+//  				throw new Exception("è½¬åº“å•çŠ¶æ€ä¸æ˜¯æœªå®¡æ‰¹çŠ¶æ€ï¼Œè¯·æ£€æŸ¥ï¼");
+				WhsTransBillVO[] ff = (WhsTransBillVO[])pfaction.processAction("UNAPPROVE", "4K", null, AP, null, null);
+				AP = ff[0];
+			}
+			head.setVdef1("Y");  //ç”±WMSç”Ÿæˆæ ‡è¯†
+			head.setVnote(jsonAy.getString("vnote"));
+			head.setStatus(VOStatus.UPDATED);
+			if(null!=jsonAy.get("outDptid")){//å‡ºåº“éƒ¨é—¨
+				head.setCdptid(jsonAy.getString("outDptid"));
+				String cdptvid = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("outDptid")+"'", new ColumnProcessor());
+				head.setCdptvid(cdptvid);
+			}
+			String cauditorid = cuserid;
+			if(null!=jsonAy.get("cbizid")){//å‡ºåº“ä¸šåŠ¡å‘˜
+				String ckywy = jsonAy.getString("cbizid");
+				head.setCbizid(ckywy);
+				String sql_cauditorid = "select u.cuserid from sm_user u where u.pk_psndoc='"+ckywy+"'";
+				cauditorid = (String) dao.executeQuery(sql_cauditorid, new ColumnProcessor());
+				if(cauditorid==null)
+					throw new Exception("å‡ºåº“ä¸šåŠ¡å‘˜(è½¬å‡ºäºº)"+ckywy+"æœªæœ‰NCè´¦å·æˆ–è€…NCè´¦å·æœªç»‘å®šèº«ä»½äººå‘˜ï¼Œè¯·æ£€æŸ¥ï¼");
+				head.setCauditorid(cauditorid);  //è½¬å‡ºäºº
+			}
+
+			if(null!=jsonAy.get("inDptid")){//å…¥åº“éƒ¨é—¨
+				head.setCotherdptid(jsonAy.getString("inDptid"));
+				String cdptvid2 = (String)dao.executeQuery("select v.pk_vid from org_dept d inner join org_dept_v v on d.pk_dept=v.pk_dept where d.pk_dept='"+jsonAy.getString("inDptid")+"'", new ColumnProcessor());
+				head.setCotherdptvid(cdptvid2);
+			}
+			String vadjuster = cuserid;
+			if(null!=jsonAy.get("cotherbizid")){//å…¥åº“ä¸šåŠ¡å‘˜
+				String rkywy = jsonAy.getString("cotherbizid");
+				head.setCotherbizid(jsonAy.getString("cotherbizid"));
+				String sql_vadjuster = "select u.cuserid from sm_user u where u.pk_psndoc='"+rkywy+"'";
+				vadjuster = (String) dao.executeQuery(sql_vadjuster, new ColumnProcessor());
+				if(vadjuster==null)
+					throw new Exception("å…¥åº“ä¸šåŠ¡å‘˜(è½¬å…¥äºº)"+rkywy+"æœªæœ‰NCè´¦å·æˆ–è€…NCè´¦å·æœªç»‘å®šèº«ä»½äººå‘˜ï¼Œè¯·æ£€æŸ¥ï¼");
+				head.setVadjuster(vadjuster);  //è½¬å…¥äºº
+			}
+			//åº”åˆ°è´§æ—¥æœŸ
+			if(null !=jsonAy.get("arrivedate")){
+				head.setDshldarrivedate(new UFDate(jsonAy.getString("arrivedate")));
+			}
+			//åº”å‘è´§æ—¥æœŸ
+			if(null !=jsonAy.get("diliverdate")){
+				head.setDshlddiliverdate(new UFDate(jsonAy.getString("diliverdate")));
+			}
+
+			//æ„é€ è¡¨ä½“ start
+			JSONArray bodyitems = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			for (int r=0;r<bodyitems.size();r++) {
+				String cspecialbid = bodyitems.getJSONObject(r).getString("cspecialbid");
+				String clocationid = bodyitems.getJSONObject(r).getString("clocationid");  //è´§ä½id
+				for(int s=0;s<bodys.length;s++) {
+					String bpk = bodys[s].getCspecialbid();
+					if(bpk.equals(cspecialbid)) {
+						WhsTransBillBodyVO bodyvo = bodys[s];
+						String cmaterialoid = bodyvo.getCmaterialoid();
+						//å› ä¸ºè½¬åº“æ•°å¯èƒ½ä¼šè¶…è¿‡å¤‡æ–™æ•°ï¼Œå¦‚æœåœ¨è¿™é‡Œè®¾ç½®å¤§äºå¤‡æ–™æ•°çš„è¯ä¼šæŠ¥é”™â€œè½¬åº“æ•°é‡æ€»å’Œä¸åˆæ³•ï¼Œå›å†™å¤±è´¥ï¼â€ï¼Œæ‰€ä»¥æ³¨é‡Šæ‰ï¼Œåœ¨å…¶ä»–å‡ºå…¥åº“æ–¹æ³•é‡Œé¢è®¾ç½®æ•°é‡
 //  		  				bodyvo.setNnum(new UFDouble(bodyitems.getJSONObject(r).getString("nnum")));
 //  		  				bodyvo.setNassistnum(new UFDouble(bodyitems.getJSONObject(r).getString("nassistnum")));
-  		 				bodyvo.setStatus(VOStatus.UPDATED);
-  		 				bodyvo.setClocationid(clocationid);
+						bodyvo.setStatus(VOStatus.UPDATED);
+						bodyvo.setClocationid(clocationid);
 //  		  			    bodyvo.setVnotebody(bodyitems.getJSONObject(r).getString("vbodynote"));
 //  		  				String vbatchcode = bodyitems.getJSONObject(r).getString("vbatchcode");
 //  		  				bodyvo.setPk_batchcode(queryPK_batchcode(vbatchcode,cmaterialoid));
 //  		  				bodyvo.setVbatchcode(vbatchcode);
 //  		  				bodyvo.setCstateid(bodyitems.getJSONObject(r).getString("cstateid"));
-  					}
-  				}
-  			}
-  			//¹¹Ôì±íÌå end 
-  			AP.setParentVO(head);
-  			AP.setChildrenVO(bodys);
-  			//×éºÏµ¥¾İvo
-  			WhsTransBillVO[] result = (WhsTransBillVO[])pfaction.processAction("WRITE", "4K", null, AP, null,null);
-  			resultpk = result[0].getParentVO().getCspecialhid();
-  			WhsTransBillVO AP2 = IQ.querySingleBillByPk(WhsTransBillVO.class, resultpk);
-  			String billcode = AP2.getParentVO().getVbillcode();
+					}
+				}
+			}
+			//æ„é€ è¡¨ä½“ end
+			AP.setParentVO(head);
+			AP.setChildrenVO(bodys);
+			//ç»„åˆå•æ®vo
+			WhsTransBillVO[] result = (WhsTransBillVO[])pfaction.processAction("WRITE", "4K", null, AP, null,null);
+			resultpk = result[0].getParentVO().getCspecialhid();
+			WhsTransBillVO AP2 = IQ.querySingleBillByPk(WhsTransBillVO.class, resultpk);
+			String billcode = AP2.getParentVO().getVbillcode();
 //  			String billcode = (String)dao.executeQuery("select vbillcode from ic_whstrans_h where cspecialhid='"+resultpk+"'", new ColumnProcessor());
-  			String successMessage = "NC×ª¿âµ¥±£´æ";
-  			int fb = AP2.getParentVO().getFbillflag();
-  			if(fb==1)
-  				result = (WhsTransBillVO[]) pfaction.processAction("APPROVE", "4K", null, AP2, null, null);
-			successMessage = successMessage+"²¢Ç©×Ö";
+			String successMessage = "NCè½¬åº“å•ä¿å­˜";
+			int fb = AP2.getParentVO().getFbillflag();
+			if(fb==1)
+				result = (WhsTransBillVO[]) pfaction.processAction("APPROVE", "4K", null, AP2, null, null);
+			successMessage = successMessage+"å¹¶ç­¾å­—";
 			Form4Kto4I(AP2,bodyitems,cauditorid,dmakedate_t);
- 			From4Kto4A(AP2,bodyitems,vadjuster,dmakedate_t);
- 			dao.executeUpdate("update ic_whstrans_h h set h.cauditorid='"+cauditorid+"',h.vadjuster='"+vadjuster+"' where h.cspecialhid='"+resultpk+"'");
- 			successMessage = successMessage+"³É¹¦£¡";
- 			returnJson.setResultBillcode(billcode);
- 			returnJson.setReturnMessage(successMessage);
- 			returnJson.setStatus("1");	
-  		} catch (Exception e) {
-  			// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-  			try {
-  				String govid = queryOne("select b.cgeneralhid from ic_generalout_b b inner join ic_whstrans_h h on b.csourcebillhid=h.cspecialhid where h.cspecialhid='"+resultpk+"' and h.dr=0 and b.dr=0");
-  				GeneralOutVO gov = IQ.querySingleBillByPk(GeneralOutVO.class, govid);
-  				if(gov!=null) {
-  	  			    int bf = gov.getParentVO().getFbillflag();
-  	  				if(bf==4) {
-  	  				   pfaction.processAction("CANCELSIGN", "4I", null, gov, null, null);
-  	  				   pfaction.processAction("DELETE", "4I", null, gov, null, null);  
-  	  				}else {
-  	  				   pfaction.processAction("DELETE", "4I", null, gov, null, null); 
-  	  				}
-  	  			}
-  				String givid = queryOne("select b.cgeneralhid from ic_generalin_b b inner join ic_whstrans_h h on b.csourcebillhid=h.cspecialhid where h.cspecialhid='"+resultpk+"' and h.dr=0 and b.dr=0");
-  				GeneralInVO giv = IQ.querySingleBillByPk(GeneralInVO.class, givid);	
-  				if(giv!=null) {
-  					int bf = giv.getParentVO().getFbillflag();
-  					if(bf==4) {
-  						pfaction.processAction("CANCELSIGN", "4A", null, giv, null, null);
-  		  				pfaction.processAction("DELETE", "4A", null, giv, null, null); 
-  					}else {
-  						pfaction.processAction("DELETE", "4A", null, giv, null, null);
-  					}	
-  				}
-  			}catch (Exception e1) {
-					e1.printStackTrace();
-			}
-  			
-  			returnJson.setResultBillcode("");
-  			returnJson.setStatus("0");
-  			returnJson.setReturnMessage(e.toString());
-  		}
-  		return RestUtils.toJSONString(returnJson);
-      
-     }
-     
-     public JSONString Generate23(JSONObject jsonAy) {
-//			returnvo returnJson = new returnvo();	
-    	    JSONObject resultJson = new JSONObject();
-			ArriveVO[] result = null;
-			String billcode = "";
-			Map ret = new HashMap();
+			From4Kto4A(AP2,bodyitems,vadjuster,dmakedate_t);
+			dao.executeUpdate("update ic_whstrans_h h set h.cauditorid='"+cauditorid+"',h.vadjuster='"+vadjuster+"' where h.cspecialhid='"+resultpk+"'");
+			successMessage = successMessage+"æˆåŠŸï¼";
+			returnJson.setResultBillcode(billcode);
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 			try {
-				NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
-				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-				 String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-				 String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-				 String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-				 if(cuserid==null)
-					throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				 String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-				 String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-				 String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-				 if(approverid==null)
-					throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-				 String vnote = jsonAy.getString("vnote");  //±¸×¢
-				 String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-				 String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-				 UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-				 UFDate dmakedate_d = dmakedate_t.getDate();	
-				 InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-				 JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-				 InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-				 InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-				 String successMessage = "";
-					
-				String pk_order = jsonAy.getString("pk_order");  //²É¹º¶©µ¥±íÍ·id
-				String[] pks = null;
-				if (pk_order.length()>0){
-					pks = pk_order.split(",");
-				}else
-					throw new Exception("µ¥¾İIDÊôĞÔÎª¿Õ£¬Çë¼ì²é´«Êä²ÎÊı£¡");
-				IOrderQuery IQ = (IOrderQuery) NCLocator.getInstance().lookup(IOrderQuery.class);
-				OrderVO[] po_data = IQ.queryOrderVOsByIds(pks, UFBoolean.FALSE);
-				if (po_data==null||po_data.length==0){
-					throw new Exception("²É¹º¶©µ¥IDÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¬Çë¼ì²é£¡");
-				}
-				
-//				OrderItemVO[] oi_new = new OrderItemVO[list.length()];
-				ArrayList<OrderItemVO> oi_new = new ArrayList<OrderItemVO>();
-				for (int t=0;t<po_data.length;t++){
-					OrderItemVO[] oi = (OrderItemVO[])po_data[t].getChildrenVO();
-					for (int r=0;r<list.size();r++){
-						String pk_order_b = list.getJSONObject(r).getString("pk_order_b")==null?"null":list.getJSONObject(r).getString("pk_order_b");  //²É¹º¶©µ¥±íÌåID
-						UFDouble nnum = list.getJSONObject(r).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(r).getString("nnum"));  //µ½»õÖ÷ÊıÁ¿
-//						UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
-						for (int s=0;s<oi.length;s++){
-							String pk_order_b2=oi[s].getPk_order_b()==null?"null":oi[s].getPk_order_b();
-							if(pk_order_b2.equals(pk_order_b)){
-								oi[s].setNcanarrivenum(nnum);
-								
-								oi_new.add(oi[s]);
-							}
-						}
+				String govid = queryOne("select b.cgeneralhid from ic_generalout_b b inner join ic_whstrans_h h on b.csourcebillhid=h.cspecialhid where h.cspecialhid='"+resultpk+"' and h.dr=0 and b.dr=0");
+				GeneralOutVO gov = IQ.querySingleBillByPk(GeneralOutVO.class, govid);
+				if(gov!=null) {
+					int bf = gov.getParentVO().getFbillflag();
+					if(bf==4) {
+						pfaction.processAction("CANCELSIGN", "4I", null, gov, null, null);
+						pfaction.processAction("DELETE", "4I", null, gov, null, null);
+					}else {
+						pfaction.processAction("DELETE", "4I", null, gov, null, null);
 					}
 				}
-				po_data[0].setChildrenVO(oi_new.toArray(new OrderItemVO[list.size()]));
-				OrderVO[] po_datas = {po_data[0]};
+				String givid = queryOne("select b.cgeneralhid from ic_generalin_b b inner join ic_whstrans_h h on b.csourcebillhid=h.cspecialhid where h.cspecialhid='"+resultpk+"' and h.dr=0 and b.dr=0");
+				GeneralInVO giv = IQ.querySingleBillByPk(GeneralInVO.class, givid);
+				if(giv!=null) {
+					int bf = giv.getParentVO().getFbillflag();
+					if(bf==4) {
+						pfaction.processAction("CANCELSIGN", "4A", null, giv, null, null);
+						pfaction.processAction("DELETE", "4A", null, giv, null, null);
+					}else {
+						pfaction.processAction("DELETE", "4A", null, giv, null, null);
+					}
+				}
+			}catch (Exception e1) {
+				e1.printStackTrace();
+			}
 
-				ArriveVO[] AV = (ArriveVO[])PfUtilTools.runChangeDataAry("21", "23", po_datas);
-				for(int r=0;r<AV.length;r++){
-					ArriveItemVO[] bodys = AV[r].getBVO();
-					ArriveItemVO[] newbodys = new ArriveItemVO[list.size()]; 
-					for (int i=0;i<list.size();i++){
-						String pk_order_b = list.getJSONObject(i).getString("pk_order_b")==null?"null":list.getJSONObject(i).getString("pk_order_b");  //²É¹º¶©µ¥±íÌåID
-						UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));  //µ½»õÖ÷ÊıÁ¿
-						UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));  //µ½»õÊıÁ¿
-						String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//»õÎ»
-						for (int j=0;j<bodys.length;j++){
-							String sourcebillbid = bodys[j].getCsourcebid()==null?"null":bodys[j].getCsourcebid();
-							String firstbid = bodys[j].getCfirstbid()==null?"null":bodys[j].getCfirstbid();
-//							String firstbid = pk_order_b;
-							String firstid = InfoQuery(firstbid,"cfirstbillhid");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İ±íÍ·ID
-							String cgddh = InfoQuery(firstbid,"cgddh");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İºÅ
-							String notebody = bodys[j].getVmemob()==null?"null":bodys[j].getVmemob();
-							
-							if(pk_order_b.equals(sourcebillbid)){
-								bodys[j].setNnum(nnum);
-								bodys[j].setNastnum(nastnum);
-								bodys[j].setCrowno(String.valueOf(i)+"0");
-								
-								bodys[j].setCfirstid(firstid);
-								bodys[j].setCfirstbid(firstbid);
-								bodys[j].setVfirstcode(cgddh);
-								bodys[j].setPk_order(firstid);
-								bodys[j].setPk_order_b(firstbid);
-								bodys[j].setVsourcecode(cgddh);
-								bodys[j].setPk_rack(clocationid);
-//								bodys[j].setCsourceid(InfoQuery(bodys[j].getCsourcebid(),"csourceid_arriveorder"));
-								newbodys[i]=bodys[j];	
-								newbodys[i].setVmemob(notebody=="null"?"":notebody);
-								break;
-							}
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+		}
+		return RestUtils.toJSONString(returnJson);
+
+	}
+
+	public JSONString Generate23(JSONObject jsonAy) {
+//			returnvo returnJson = new returnvo();
+		JSONObject resultJson = new JSONObject();
+		ArriveVO[] result = null;
+		String billcode = "";
+		Map ret = new HashMap();
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+			String successMessage = "";
+
+			String pk_order = jsonAy.getString("pk_order");  //é‡‡è´­è®¢å•è¡¨å¤´id
+			String[] pks = null;
+			if (pk_order.length()>0){
+				pks = pk_order.split(",");
+			}else
+				throw new Exception("å•æ®IDå±æ€§ä¸ºç©ºï¼Œè¯·æ£€æŸ¥ä¼ è¾“å‚æ•°ï¼");
+			IOrderQuery IQ = (IOrderQuery) NCLocator.getInstance().lookup(IOrderQuery.class);
+			OrderVO[] po_data = IQ.queryOrderVOsByIds(pks, UFBoolean.FALSE);
+			if (po_data==null||po_data.length==0){
+				throw new Exception("é‡‡è´­è®¢å•IDåœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			}
+
+//				OrderItemVO[] oi_new = new OrderItemVO[list.length()];
+			ArrayList<OrderItemVO> oi_new = new ArrayList<OrderItemVO>();
+			for (int t=0;t<po_data.length;t++){
+				OrderItemVO[] oi = (OrderItemVO[])po_data[t].getChildrenVO();
+				for (int r=0;r<list.size();r++){
+					String pk_order_b = list.getJSONObject(r).getString("pk_order_b")==null?"null":list.getJSONObject(r).getString("pk_order_b");  //é‡‡è´­è®¢å•è¡¨ä½“ID
+					UFDouble nnum = list.getJSONObject(r).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(r).getString("nnum"));  //åˆ°è´§ä¸»æ•°é‡
+//						UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
+					for (int s=0;s<oi.length;s++){
+						String pk_order_b2=oi[s].getPk_order_b()==null?"null":oi[s].getPk_order_b();
+						if(pk_order_b2.equals(pk_order_b)){
+							oi[s].setNcanarrivenum(nnum);
+
+							oi_new.add(oi[s]);
 						}
-					}
-					if(newbodys[0]==null){
-						throw new Exception("´«ÊäµÄ²É¹º¶©µ¥±íÌå¼ÇÂ¼¶¼²»Âú×ãÈë¿âÌõ¼ş,Çë¼ì²é£¡");
-					}
-					AV[r].setChildrenVO(newbodys);
-					result = (ArriveVO[])pfaction.processAction("SAVEBASE", "23", null, AV[r], null, null);
-					billcode = (String)result[0].getParentVO().getAttributeValue("vbillcode");
-					successMessage = "NCµ½»õµ¥±£´æ";
-					if(sighFlag.equals("Y")){
-						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-						UFDateTime taudittime_t = new UFDateTime(taudittime);			
-						InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-						InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-						pfaction.processAction("APPROVE", "23", null, result[0], null, null);
-						successMessage = successMessage+"²¢Ç©×Ö";
-					}
-		            updateSourceID(result[0]);
-				}
-				
-				ret.put("ResultBillcode", billcode);
-				ret.put("ReturnMessage", successMessage+"³É¹¦£¡");
-				ret.put("Status","1");
-				ret.put("pk_arriveorder",(String)result[0].getParentVO().getAttributeValue("pk_arriveorder"));
-				List<Map> mapList2 = new ArrayList();
-				ArriveItemVO[] bvos = result[0].getBVO();
-				for(int k=0;k<bvos.length;k++) {
-					String csourcebid = bvos[k].getCsourcebid();
-					String pk_arriveorder_b = bvos[k].getPk_arriveorder_b();
-					Map map_msv = new HashMap();
-					map_msv.put("pk_order_b", csourcebid);
-					map_msv.put("pk_arriveorder_b", pk_arriveorder_b);
-					mapList2.add(map_msv);
-				}
-				ret.put("ids",mapList2);
-//				returnJson.setResultBillcode(billcode);
-//				returnJson.setReturnMessage(successMessage+"³É¹¦£¡");
-//				returnJson.setStatus("1");
-			} catch (Exception e) {
-				ret.put("ResultBillcode", "");
-				ret.put("ReturnMessage", e.toString());
-				ret.put("Status","0");
-				if(result!=null&&result.length>0){
-					String pk = result[0].getHVO().getPk_arriveorder();
-					ArriveVO errorVo = IQ.querySingleBillByPk(ArriveVO.class, pk);
-					try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
-//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-						pfaction.processAction("DELETE", "23", null, errorVo, null, null);
-					} catch (BusinessException e1) {
-						// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
-						e1.printStackTrace();
 					}
 				}
 			}
-			return RestUtils.toJSONString(ret);
-     }
-     
-     private void updateSourceID(ArriveVO vo) throws DAOException{
-     	ArriveItemVO[] bodys = vo.getBVO();
-     	for(int i=0;i<bodys.length;i++){
-     		String Pk_arriveorder_b = bodys[i].getPk_arriveorder_b();
-     		String sourcebid= bodys[i].getCsourcebid();
-     		String sql = "update po_arriveorder_b b set b.csourceid=(select pk_order from po_order_b where pk_order_b='"+sourcebid+"') where b.pk_arriveorder_b='"+Pk_arriveorder_b+"'";
-     		dao.executeUpdate(sql);
-     	}
-     	
-     }
-     
-     public JSONString Generate2345(JSONObject jsonAy) {
-    	returnvo returnJson = new returnvo();
- 		PurchaseInVO[] result = null;
- 		String billcode = "";
- 		try {
- 			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
- 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-			 String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-			 String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-			 if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			 String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-			 String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-			 String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-			 if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			 String vnote = jsonAy.getString("vnote");  //±¸×¢
-			 String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			 String replenishflag = jsonAy.getString("replenishflag");  //ÊÇ·ñÍË¿â
-			 UFBoolean replenishflag2 = UFBoolean.FALSE;
-			 if(replenishflag!=null&&replenishflag.equals("Y"))
+			po_data[0].setChildrenVO(oi_new.toArray(new OrderItemVO[list.size()]));
+			OrderVO[] po_datas = {po_data[0]};
+
+			ArriveVO[] AV = (ArriveVO[])PfUtilTools.runChangeDataAry("21", "23", po_datas);
+			for(int r=0;r<AV.length;r++){
+				ArriveItemVO[] bodys = AV[r].getBVO();
+				ArriveItemVO[] newbodys = new ArriveItemVO[list.size()];
+				for (int i=0;i<list.size();i++){
+					String pk_order_b = list.getJSONObject(i).getString("pk_order_b")==null?"null":list.getJSONObject(i).getString("pk_order_b");  //é‡‡è´­è®¢å•è¡¨ä½“ID
+					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));  //åˆ°è´§ä¸»æ•°é‡
+					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));  //åˆ°è´§æ•°é‡
+					String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//è´§ä½
+					for (int j=0;j<bodys.length;j++){
+						String sourcebillbid = bodys[j].getCsourcebid()==null?"null":bodys[j].getCsourcebid();
+						String firstbid = bodys[j].getCfirstbid()==null?"null":bodys[j].getCfirstbid();
+//							String firstbid = pk_order_b;
+						String firstid = InfoQuery(firstbid,"cfirstbillhid");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®è¡¨å¤´ID
+						String cgddh = InfoQuery(firstbid,"cgddh");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®å·
+						String notebody = bodys[j].getVmemob()==null?"null":bodys[j].getVmemob();
+
+						if(pk_order_b.equals(sourcebillbid)){
+							bodys[j].setNnum(nnum);
+							bodys[j].setNastnum(nastnum);
+							bodys[j].setCrowno(String.valueOf(i)+"0");
+
+							bodys[j].setCfirstid(firstid);
+							bodys[j].setCfirstbid(firstbid);
+							bodys[j].setVfirstcode(cgddh);
+							bodys[j].setPk_order(firstid);
+							bodys[j].setPk_order_b(firstbid);
+							bodys[j].setVsourcecode(cgddh);
+							bodys[j].setPk_rack(clocationid);
+//								bodys[j].setCsourceid(InfoQuery(bodys[j].getCsourcebid(),"csourceid_arriveorder"));
+							newbodys[i]=bodys[j];
+							newbodys[i].setVmemob(notebody=="null"?"":notebody);
+							break;
+						}
+					}
+				}
+				if(newbodys[0]==null){
+					throw new Exception("ä¼ è¾“çš„é‡‡è´­è®¢å•è¡¨ä½“è®°å½•éƒ½ä¸æ»¡è¶³å…¥åº“æ¡ä»¶,è¯·æ£€æŸ¥ï¼");
+				}
+				AV[r].setChildrenVO(newbodys);
+				result = (ArriveVO[])pfaction.processAction("SAVEBASE", "23", null, AV[r], null, null);
+				billcode = (String)result[0].getParentVO().getAttributeValue("vbillcode");
+				successMessage = "NCåˆ°è´§å•ä¿å­˜";
+				if(sighFlag.equals("Y")){
+					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
+					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+					pfaction.processAction("APPROVE", "23", null, result[0], null, null);
+					successMessage = successMessage+"å¹¶ç­¾å­—";
+				}
+				updateSourceID(result[0]);
+			}
+
+			ret.put("ResultBillcode", billcode);
+			ret.put("ReturnMessage", successMessage+"æˆåŠŸï¼");
+			ret.put("Status","1");
+			ret.put("pk_arriveorder",(String)result[0].getParentVO().getAttributeValue("pk_arriveorder"));
+			List<Map> mapList2 = new ArrayList();
+			ArriveItemVO[] bvos = result[0].getBVO();
+			for(int k=0;k<bvos.length;k++) {
+				String csourcebid = bvos[k].getCsourcebid();
+				String pk_arriveorder_b = bvos[k].getPk_arriveorder_b();
+				Map map_msv = new HashMap();
+				map_msv.put("pk_order_b", csourcebid);
+				map_msv.put("pk_arriveorder_b", pk_arriveorder_b);
+				mapList2.add(map_msv);
+			}
+			ret.put("ids",mapList2);
+//				returnJson.setResultBillcode(billcode);
+//				returnJson.setReturnMessage(successMessage+"æˆåŠŸï¼");
+//				returnJson.setStatus("1");
+		} catch (Exception e) {
+			ret.put("ResultBillcode", "");
+			ret.put("ReturnMessage", e.toString());
+			ret.put("Status","0");
+			if(result!=null&&result.length>0){
+				String pk = result[0].getHVO().getPk_arriveorder();
+				ArriveVO errorVo = IQ.querySingleBillByPk(ArriveVO.class, pk);
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
+//						InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					pfaction.processAction("DELETE", "23", null, errorVo, null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(ret);
+	}
+
+	private void updateSourceID(ArriveVO vo) throws DAOException{
+		ArriveItemVO[] bodys = vo.getBVO();
+		for(int i=0;i<bodys.length;i++){
+			String Pk_arriveorder_b = bodys[i].getPk_arriveorder_b();
+			String sourcebid= bodys[i].getCsourcebid();
+			String sql = "update po_arriveorder_b b set b.csourceid=(select pk_order from po_order_b where pk_order_b='"+sourcebid+"') where b.pk_arriveorder_b='"+Pk_arriveorder_b+"'";
+			dao.executeUpdate(sql);
+		}
+
+	}
+
+	public JSONString Generate2345(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		PurchaseInVO[] result = null;
+		String billcode = "";
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String replenishflag = jsonAy.getString("replenishflag");  //æ˜¯å¦é€€åº“
+			UFBoolean replenishflag2 = UFBoolean.FALSE;
+			if(replenishflag!=null&&replenishflag.equals("Y"))
 				replenishflag2 = UFBoolean.TRUE;
-			 String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			 String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-			 UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			 UFDate dmakedate_d = dmakedate_t.getDate();	
-			 InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			 JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-			 InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			 InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-			 String successMessage = "";
- 			
- 			String pk_arriveorder = jsonAy.getString("pk_arriveorder");  //µ½»õµ¥ID
- 			String arriveorderCode = InfoQuery(pk_arriveorder,"arriveorderCode");
- 			String[] acs = {arriveorderCode};
- 			IArriveBillQuery IQ = (IArriveBillQuery) NCLocator.getInstance().lookup(IArriveBillQuery.class);
- 			ArriveVO[] AV = IQ.queryArriveAggVo(acs);
- 			
- 			if (AV==null||AV.length==0){
- 				throw new Exception("´«ÊäµÄµ½»õµ¥IDÔÚÏµÍ³²»´æÔÚ»òÕßÒÑÉ¾³ı!");
- 			}
- 			ArriveItemVO[] items = (ArriveItemVO[])AV[0].getChildrenVO();
- 			ArriveItemVO[] items_new = new ArriveItemVO[list.size()];
- 			UFDouble ntotalnum = UFDouble.ZERO_DBL;
- 			for (int r=0;r<list.size();r++){
- 				String pk_arriveorder_b = list.getJSONObject(r).getString("pk_arriveorder_b")==null?"null":list.getJSONObject(r).getString("pk_arriveorder_b");
- 				UFDouble nnum = list.getJSONObject(r).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(r).getString("nnum"));
- 				ntotalnum = ntotalnum.add(nnum);
- 				for (int s=0;s<items.length;s++){
- 					String Pk_arriveorder_b2=items[s].getPk_arriveorder_b()==null?"null":items[s].getPk_arriveorder_b();
- 					if(Pk_arriveorder_b2.equals(pk_arriveorder_b)){
- 						items_new[r]=items[s];
- 					}
- 				}
- 			}
- 			AV[0].setChildrenVO(items_new);
- 			
- 			PurchaseInVO[] PV = (PurchaseInVO[])PfUtilTools.runChangeDataAry("23","45", AV);
- 			for (int c=0;c<PV.length;c++){
- 				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
- 				PV[c].getParentVO().setVnote(vnote);
- 				PV[c].getParentVO().setNtotalnum(ntotalnum);
- 				PV[c].getParentVO().setCtrantypeid("0001A110000000002DXO");
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+			String successMessage = "";
+
+			String pk_arriveorder = jsonAy.getString("pk_arriveorder");  //åˆ°è´§å•ID
+			String arriveorderCode = InfoQuery(pk_arriveorder,"arriveorderCode");
+			String[] acs = {arriveorderCode};
+			IArriveBillQuery IQ = (IArriveBillQuery) NCLocator.getInstance().lookup(IArriveBillQuery.class);
+			ArriveVO[] AV = IQ.queryArriveAggVo(acs);
+
+			if (AV==null||AV.length==0){
+				throw new Exception("ä¼ è¾“çš„åˆ°è´§å•IDåœ¨ç³»ç»Ÿä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
+			}
+			ArriveItemVO[] items = (ArriveItemVO[])AV[0].getChildrenVO();
+			ArriveItemVO[] items_new = new ArriveItemVO[list.size()];
+			UFDouble ntotalnum = UFDouble.ZERO_DBL;
+			for (int r=0;r<list.size();r++){
+				String pk_arriveorder_b = list.getJSONObject(r).getString("pk_arriveorder_b")==null?"null":list.getJSONObject(r).getString("pk_arriveorder_b");
+				UFDouble nnum = list.getJSONObject(r).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(r).getString("nnum"));
+				ntotalnum = ntotalnum.add(nnum);
+				for (int s=0;s<items.length;s++){
+					String Pk_arriveorder_b2=items[s].getPk_arriveorder_b()==null?"null":items[s].getPk_arriveorder_b();
+					if(Pk_arriveorder_b2.equals(pk_arriveorder_b)){
+						items_new[r]=items[s];
+					}
+				}
+			}
+			AV[0].setChildrenVO(items_new);
+
+			PurchaseInVO[] PV = (PurchaseInVO[])PfUtilTools.runChangeDataAry("23","45", AV);
+			for (int c=0;c<PV.length;c++){
+				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
+				PV[c].getParentVO().setVnote(vnote);
+				PV[c].getParentVO().setNtotalnum(ntotalnum);
+				PV[c].getParentVO().setCtrantypeid("0001A110000000002DXO");
 				PV[c].getParentVO().setVtrantypecode("45-01");
 				PV[c].getHead().setFreplenishflag(replenishflag2);
 				PV[c].getParentVO().setStatus(VOStatus.NEW);
- 				PurchaseInBodyVO[] bodys = PV[c].getBodys();
- 				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //ÖØĞÂ×é½¨±íÌåVO
- 				for (int i=0;i<list.size();i++){
- 					String pk_arriveorder_b = list.getJSONObject(i).getString("pk_arriveorder_b")==null?"null":list.getJSONObject(i).getString("pk_arriveorder_b");
- 					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
- 					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
- 					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
- 					String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");  
-					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
+				PurchaseInBodyVO[] bodys = PV[c].getBodys();
+				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //é‡æ–°ç»„å»ºè¡¨ä½“VO
+				for (int i=0;i<list.size();i++){
+					String pk_arriveorder_b = list.getJSONObject(i).getString("pk_arriveorder_b")==null?"null":list.getJSONObject(i).getString("pk_arriveorder_b");
+					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
+					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
+					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
+					String cprojectid = list.getJSONObject(i).getString("cprojectid")==null?"":list.getJSONObject(i).getString("cprojectid");
+					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
 					String Locationid = GetLocationid(cwarehouseid,clocationCode);
-					String cstateid = list.getJSONObject(i).getString("cstateid");  //¿â´æ×´Ì¬ID
-					String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//»õÎ»id
- 					
- 					for (int j=0;j<bodys.length;j++){
- 						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
- 						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //Ô´Í·µ¥¾İ±íÌåID
- 						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İ±íÍ·ID
- 						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İºÅ
- 						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
- 						if(pk_arriveorder_b.equals(sourcebillbid)){
- 							HashMap<String,Object> poinfo = queryPo(pk_arriveorder_b);//²éÑ¯¿ÉÈë¿âÊıÁ¿
+					String cstateid = list.getJSONObject(i).getString("cstateid");  //åº“å­˜çŠ¶æ€ID
+					String clocationid = list.getJSONObject(i).getString("clocationid") == null ? "":list.getJSONObject(i).getString("clocationid");//è´§ä½id
+
+					for (int j=0;j<bodys.length;j++){
+						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
+						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //æºå¤´å•æ®è¡¨ä½“ID
+						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®è¡¨å¤´ID
+						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®å·
+						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
+						if(pk_arriveorder_b.equals(sourcebillbid)){
+							HashMap<String,Object> poinfo = queryPo(pk_arriveorder_b);//æŸ¥è¯¢å¯å…¥åº“æ•°é‡
 							UFDouble krkzsl = poinfo.get("krkzsl")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(poinfo.get("krkzsl")));
 							UFDouble krksl = poinfo.get("krksl")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(poinfo.get("krksl")));
- 							bodys[j].setNshouldnum(krkzsl);
- 							bodys[j].setNnum(nnum);
- 							bodys[j].setNshouldassistnum(krksl);
- 							bodys[j].setNassistnum(nastnum);
- 							bodys[j].setNqtunitnum(nastnum); 
- 							bodys[j].setVbatchcode(vbatchcode);
+							bodys[j].setNshouldnum(krkzsl);
+							bodys[j].setNnum(nnum);
+							bodys[j].setNshouldassistnum(krksl);
+							bodys[j].setNassistnum(nastnum);
+							bodys[j].setNqtunitnum(nastnum);
+							bodys[j].setVbatchcode(vbatchcode);
 // 							bodys[j].setVbdef3(InfoQuery(bodys[j].getCmaterialoid(),"cwfl"));
- 							bodys[j].setPk_batchcode(queryPK_batchcode(vbatchcode,bodys[j].getCmaterialoid()));
- 							bodys[j].setPk_creqwareid(cwarehouseid);
- 							bodys[j].setCfirstbillhid(cfirstbillhid);
- 							bodys[j].setVfirstbillcode(cgddh);
- 							UFDouble hsje=bodys[j].getNorigtaxprice().multiply(nnum).setScale(2, UFDouble.ROUND_HALF_UP);  //º¬Ë°½ğ¶î
+							bodys[j].setPk_batchcode(queryPK_batchcode(vbatchcode,bodys[j].getCmaterialoid()));
+							bodys[j].setPk_creqwareid(cwarehouseid);
+							bodys[j].setCfirstbillhid(cfirstbillhid);
+							bodys[j].setVfirstbillcode(cgddh);
+							UFDouble hsje=bodys[j].getNorigtaxprice().multiply(nnum).setScale(2, UFDouble.ROUND_HALF_UP);  //å«ç¨é‡‘é¢
 // 							UFDouble bhsje=bodys[j].getNorigprice().multiply(nnum).setScale(2, UFDouble.ROUND_HALF_UP);
- 							UFDouble bhsje=hsje.div(UFDouble.ONE_DBL.add(bodys[j].getNtaxrate().multiply(0.01))).setScale(2, UFDouble.ROUND_HALF_UP);   //ÎŞË°½ğ¶î    Ëã·¨¸ÄÎª²ÆÎñµÄÄÇÖÖµ¹ÍÆ¼ÆËã·¨
- 							bodys[j].setNorigtaxmny(hsje);
- 							bodys[j].setNtaxmny(hsje);
- 							bodys[j].setNcaltaxmny(bhsje);
- 							bodys[j].setNmny(bhsje);
- 							bodys[j].setNorigmny(bhsje);
- 							bodys[j].setNtax(hsje.sub(bhsje));
- 							bodys[j].setDbizdate(dmakedate_d);
+							UFDouble bhsje=hsje.div(UFDouble.ONE_DBL.add(bodys[j].getNtaxrate().multiply(0.01))).setScale(2, UFDouble.ROUND_HALF_UP);   //æ— ç¨é‡‘é¢    ç®—æ³•æ”¹ä¸ºè´¢åŠ¡çš„é‚£ç§å€’æ¨è®¡ç®—æ³•
+							bodys[j].setNorigtaxmny(hsje);
+							bodys[j].setNtaxmny(hsje);
+							bodys[j].setNcaltaxmny(bhsje);
+							bodys[j].setNmny(bhsje);
+							bodys[j].setNorigmny(bhsje);
+							bodys[j].setNtax(hsje.sub(bhsje));
+							bodys[j].setDbizdate(dmakedate_d);
 							bodys[j].setDproducedate(dmakedate_d);
-							bodys[j].setDvalidate(getDvalidate(bodys[j].getCmaterialoid(),PV[c].getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));	
+							bodys[j].setDvalidate(getDvalidate(bodys[j].getCmaterialoid(),PV[c].getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));
 							bodys[j].setCprojectid(cprojectid);
 							bodys[j].setClocationid(Locationid);
 							bodys[j].setClocationid(clocationid);
 							bodys[j].setCstateid(cstateid);
 // 							bodys[j].setVbdef4(vbdef4);
- 							newbodys[j]=bodys[j];	
- 							newbodys[j].setVnotebody(notebody=="null"?"":notebody);
- 							break;
- 						}
- 					}
- 				}
- 				if(newbodys[0]==null){
- 					throw new Exception("´«ÊäµÄµ½»õµ¥±íÌå¼ÇÂ¼¶¼²»Âú×ãÈë¿âÌõ¼ş,Çë¼ì²é£¡");
- 				}
- 				PV[c].setChildrenVO(newbodys);
- 				result = (PurchaseInVO[])pfaction.processAction("WRITE", "45", null, PV[c], null, null);
- 				billcode = result[0].getParentVO().getVbillcode();
- 				successMessage = "²É¹ºÈë¿âµ¥±£´æ";
- 				if(sighFlag.equals("Y")){
-					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					pfaction.processAction("SIGN", "45", null, result[0], null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
+							newbodys[j]=bodys[j];
+							newbodys[j].setVnotebody(notebody=="null"?"":notebody);
+							break;
+						}
+					}
 				}
- 			}
- 			
- 			returnJson.setResultBillcode(billcode);
- 			returnJson.setReturnMessage(successMessage+"³É¹¦£¡");
- 			returnJson.setStatus("1");
- 		} catch (Exception e) {
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 			if(result!=null&&result.length>0){
- 				String[] PurchaseInPKS = new String[]{result[0].getPrimaryKey()};
- 				IPurchaseInQueryAPI PQ = (IPurchaseInQueryAPI) NCLocator.getInstance().lookup(IPurchaseInQueryAPI.class);
-                 
- 				try {  //Èç¹ûÉú³ÉÁË²É¹ºÈë¿â£¬¶øÉóÅúÒì³££¬ÔòÉ¾³ı²É¹ºÈë¿âµ¥
- 					PurchaseInVO[] newPurchaseInVO= (PurchaseInVO[])PQ.queryVOByIDs(PurchaseInPKS);
- 					pfaction.processAction("DELETE", "45", null, newPurchaseInVO[0], null, null);
- 				} catch (BusinessException e1) {
- 					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
- 					e1.printStackTrace();
- 				}
- 			}
- 		}
- 		return RestUtils.toJSONString(returnJson);
-     }
-     
- 	public JSONString Update45(JSONObject jsonAy) {
- 		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
- 		returnvo returnJson = new returnvo();
- 		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+				if(newbodys[0]==null){
+					throw new Exception("ä¼ è¾“çš„åˆ°è´§å•è¡¨ä½“è®°å½•éƒ½ä¸æ»¡è¶³å…¥åº“æ¡ä»¶,è¯·æ£€æŸ¥ï¼");
+				}
+				PV[c].setChildrenVO(newbodys);
+				result = (PurchaseInVO[])pfaction.processAction("WRITE", "45", null, PV[c], null, null);
+				billcode = result[0].getParentVO().getVbillcode();
+				successMessage = "é‡‡è´­å…¥åº“å•ä¿å­˜";
+				if(sighFlag.equals("Y")){
+					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
+					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+					pfaction.processAction("SIGN", "45", null, result[0], null, null);
+					successMessage = successMessage+"å¹¶ç­¾å­—";
+				}
+			}
+
+			returnJson.setResultBillcode(billcode);
+			returnJson.setReturnMessage(successMessage+"æˆåŠŸï¼");
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(result!=null&&result.length>0){
+				String[] PurchaseInPKS = new String[]{result[0].getPrimaryKey()};
+				IPurchaseInQueryAPI PQ = (IPurchaseInQueryAPI) NCLocator.getInstance().lookup(IPurchaseInQueryAPI.class);
+
+				try {  //å¦‚æœç”Ÿæˆäº†é‡‡è´­å…¥åº“ï¼Œè€Œå®¡æ‰¹å¼‚å¸¸ï¼Œåˆ™åˆ é™¤é‡‡è´­å…¥åº“å•
+					PurchaseInVO[] newPurchaseInVO= (PurchaseInVO[])PQ.queryVOByIDs(PurchaseInPKS);
+					pfaction.processAction("DELETE", "45", null, newPurchaseInVO[0], null, null);
+				} catch (BusinessException e1) {
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+					e1.printStackTrace();
+				}
+			}
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Update45(JSONObject jsonAy) {
+		// TODO è‡ªåŠ¨ç”Ÿæˆçš„æ–¹æ³•å­˜æ ¹
+		returnvo returnJson = new returnvo();
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 		try {
- 			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+		try {
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			UFDate dmakedate_d = dmakedate_t.getDate();	
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			
-			String vnote = jsonAy.getString("vnote");  //±¸×¢
- 			String successMessage = "";;
- 			
- 			String cgeneralhid = jsonAy.getString("cgeneralhid");  //²ú³ÉÆ·Èë¿âµ¥ID
- 			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
- 			PurchaseInVO GIVO_ori = IQ.querySingleBillByPk(PurchaseInVO.class, cgeneralhid);
- 			if(GIVO_ori==null)
- 				throw new Exception("²É¹ºÈë¿âµ¥ID£º"+cgeneralhid+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
- 			String pk_group = GIVO_ori.getParentVO().getPk_group();
- 			
- 			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
- 			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-// 			InvocationInfoProxy.getInstance().setBizDateTime(audittime.getMillis());
- 			int Fbillflag = GIVO_ori.getParentVO().getFbillflag();
- 			if(Fbillflag!=2) {
- 				PurchaseInVO[] tempvo = (PurchaseInVO[])pfaction.processAction("CANCELSIGN", "45", null, GIVO_ori, null, null);
- 				GIVO_ori = tempvo[0];
- 			}
- 			PurchaseInVO[] GIVO_ori2 = {GIVO_ori};
- 			PurchaseInVO GIVO = (PurchaseInVO)GIVO_ori.clone();
- 			PurchaseInVO[] GIVO2 = {GIVO};
- 			PurchaseInBodyVO[] bvos = GIVO.getBodys();
- 			PurchaseInHeadVO hvo = GIVO.getHead();
- 			hvo.setVdef2("Y");
- 			hvo.setStatus(VOStatus.UPDATED);
- 			hvo.setDbilldate(dmakedate_d);
- 			JSONArray list = jsonAy.getJSONArray("list");
- 			for(int i=0;i<list.size();i++){
- 				String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");  //±íÌåÖ÷¼ü 				
- 				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));  //Èë¿âÖ÷ÊıÁ¿
- 				UFDouble nassistnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));  //Èë¿âÊıÁ¿
- 				String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
- 				String cstateid = list.getJSONObject(i).getString("cstateid")==null?"":list.getJSONObject(i).getString("cstateid");
- 				for(int j=0;j<bvos.length;j++){
- 					String cgeneralbid2 = bvos[j].getCgeneralbid();
- 					if(cgeneralbid.equals(cgeneralbid2)){
- 						HashMap<String,Object> matinfo = queryMaterialBD(bvos[j].getCmaterialoid());//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
- 						UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight"))); 						
- 						bvos[j].setNnum(nnum);
- 						bvos[j].setNassistnum(nassistnum);
- 						bvos[j].setVbatchcode(vbatchcode);
- 						bvos[j].setPk_batchcode(queryPK_batchcode(vbatchcode,bvos[j].getCmaterialoid()));
- 						bvos[j].setCstateid(cstateid);
- 						bvos[j].setDbizdate(dmakedate_d);
- 						if(!unitweight.equals(UFDouble.ZERO_DBL))
- 							bvos[j].setNweight(unitweight.multiply(nnum).setScale(4, UFDouble.ROUND_HALF_UP));
- 						bvos[j].setStatus(VOStatus.UPDATED);			
- 					}
- 				}
- 			}
- 			
-// 			FinProdInVO[] result = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, GIVO, null, null);
- 			IPurchaseInMaintain PQ = (IPurchaseInMaintain) NCLocator.getInstance().lookup(IPurchaseInMaintain.class);
- 			PurchaseInVO[] result = PQ.update(GIVO2,GIVO_ori2);
- 			successMessage = "NC²É¹ºÈë¿âµ¥±£´æ";
- 			if(sighFlag.equals("Y")){
- 				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
-				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
- 				pfaction.processAction("SIGN", "45", null, result[0], null, null);
- 				successMessage = successMessage+"²¢Ç©×Ö";
- 			}
- 			successMessage = successMessage+"³É¹¦£¡";
 
- 			returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
- 			returnJson.setReturnMessage(successMessage);
- 			returnJson.setStatus("1");
- 			
- 		} catch (Exception e) {
- 			// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 		}
- 		return RestUtils.toJSONString(returnJson);
- 	}
- 	
- 	public JSONString Generate4H(JSONObject jsonAy) {
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String successMessage = "";;
+
+			String cgeneralhid = jsonAy.getString("cgeneralhid");  //äº§æˆå“å…¥åº“å•ID
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			PurchaseInVO GIVO_ori = IQ.querySingleBillByPk(PurchaseInVO.class, cgeneralhid);
+			if(GIVO_ori==null)
+				throw new Exception("é‡‡è´­å…¥åº“å•IDï¼š"+cgeneralhid+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String pk_group = GIVO_ori.getParentVO().getPk_group();
+
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+// 			InvocationInfoProxy.getInstance().setBizDateTime(audittime.getMillis());
+			int Fbillflag = GIVO_ori.getParentVO().getFbillflag();
+			if(Fbillflag!=2) {
+				PurchaseInVO[] tempvo = (PurchaseInVO[])pfaction.processAction("CANCELSIGN", "45", null, GIVO_ori, null, null);
+				GIVO_ori = tempvo[0];
+			}
+			PurchaseInVO[] GIVO_ori2 = {GIVO_ori};
+			PurchaseInVO GIVO = (PurchaseInVO)GIVO_ori.clone();
+			PurchaseInVO[] GIVO2 = {GIVO};
+			PurchaseInBodyVO[] bvos = GIVO.getBodys();
+			PurchaseInHeadVO hvo = GIVO.getHead();
+			hvo.setVdef2("Y");
+			hvo.setStatus(VOStatus.UPDATED);
+			hvo.setDbilldate(dmakedate_d);
+			JSONArray list = jsonAy.getJSONArray("list");
+			for(int i=0;i<list.size();i++){
+				String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");  //è¡¨ä½“ä¸»é”®
+				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));  //å…¥åº“ä¸»æ•°é‡
+				UFDouble nassistnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));  //å…¥åº“æ•°é‡
+				String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
+				String cstateid = list.getJSONObject(i).getString("cstateid")==null?"":list.getJSONObject(i).getString("cstateid");
+				for(int j=0;j<bvos.length;j++){
+					String cgeneralbid2 = bvos[j].getCgeneralbid();
+					if(cgeneralbid.equals(cgeneralbid2)){
+						HashMap<String,Object> matinfo = queryMaterialBD(bvos[j].getCmaterialoid());//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
+						UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
+						bvos[j].setNnum(nnum);
+						bvos[j].setNassistnum(nassistnum);
+						bvos[j].setVbatchcode(vbatchcode);
+						bvos[j].setPk_batchcode(queryPK_batchcode(vbatchcode,bvos[j].getCmaterialoid()));
+						bvos[j].setCstateid(cstateid);
+						bvos[j].setDbizdate(dmakedate_d);
+						if(!unitweight.equals(UFDouble.ZERO_DBL))
+							bvos[j].setNweight(unitweight.multiply(nnum).setScale(4, UFDouble.ROUND_HALF_UP));
+						bvos[j].setStatus(VOStatus.UPDATED);
+					}
+				}
+			}
+
+// 			FinProdInVO[] result = (FinProdInVO[])pfaction.processAction("WRITE", "46", null, GIVO, null, null);
+			IPurchaseInMaintain PQ = (IPurchaseInMaintain) NCLocator.getInstance().lookup(IPurchaseInMaintain.class);
+			PurchaseInVO[] result = PQ.update(GIVO2,GIVO_ori2);
+			successMessage = "NCé‡‡è´­å…¥åº“å•ä¿å­˜";
+			if(sighFlag.equals("Y")){
+				InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
+				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+				pfaction.processAction("SIGN", "45", null, result[0], null, null);
+				successMessage = successMessage+"å¹¶ç­¾å­—";
+			}
+			successMessage = successMessage+"æˆåŠŸï¼";
+
+			returnJson.setResultBillcode(result[0].getParentVO().getVbillcode());
+			returnJson.setReturnMessage(successMessage);
+			returnJson.setStatus("1");
+
+		} catch (Exception e) {
+			// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Generate4H(JSONObject jsonAy) {
 
 		returnvo returnJson = new returnvo();
 		BorrowOutVO[] result = null;
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 		Map ret = new HashMap();
 		try {
 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 			BorrowOutVO Bovo = new BorrowOutVO();
 			BorrowOutHeadVO hvo = new BorrowOutHeadVO();
-			String cwarehouseid = jsonAy.getString("cwarehouseid");  //Èë¿â²Ö¿âid
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //å…¥åº“ä»“åº“id
 
-			String vnote = jsonAy.getString("vnote");  //±íÍ·±¸×¢
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
+			String vnote = jsonAy.getString("vnote");  //è¡¨å¤´å¤‡æ³¨
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
 			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-		    String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
 			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
 			String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-			
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
 			JSONArray list = jsonAy.getJSONArray("list");
 			BorrowOutBodyVO[] bvos = new BorrowOutBodyVO[list.size()];
-			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
 			String successMessage = "";
-			
+
 			hvo.setBinitial(UFBoolean.FALSE);
 			hvo.setCorpoid(pk_org);
 			hvo.setCorpvid(pk_org_v);
@@ -3644,14 +3667,14 @@ public class RestForWMSimpl {
 			hvo.setVtrantypecode("4H-01");
 			hvo.setVnote(vnote);
 			hvo.setStatus(VOStatus.NEW);
-			
+
 			for(int i=0;i<list.size();i++){
-				String crowno = list.getJSONObject(i).getString("crowno");  //ĞĞºÅ
-				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ÎïÁÏid
-//				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
-				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //Ö÷ÊıÁ¿
-				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//¸¨ÊıÁ¿		
-				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //Åú´ÎºÅ
+				String crowno = list.getJSONObject(i).getString("crowno");  //è¡Œå·
+				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ç‰©æ–™id
+//				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
+				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //ä¸»æ•°é‡
+				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//è¾…æ•°é‡
+				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //æ‰¹æ¬¡å·
 				String cstateid = list.getJSONObject(i).getString("cstateid");
 				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
 						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
@@ -3666,9 +3689,9 @@ public class RestForWMSimpl {
 					zdw=materialMap.get("zdw").toString();
 					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
 				}else
-					throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-				
-				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+
+				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
 				UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
 				bvos[i] = new BorrowOutBodyVO();
 				bvos[i].setBbarcodeclose(UFBoolean.FALSE);
@@ -3704,16 +3727,16 @@ public class RestForWMSimpl {
 			Bovo.setParentVO(hvo);
 			Bovo.setChildrenVO(bvos);
 			result=(BorrowOutVO[])pfaction.processAction("WRITE", "4H", null, Bovo,null, null);
-			successMessage = "NC½è³öµ¥±£´æ";
+			successMessage = "NCå€Ÿå‡ºå•ä¿å­˜";
 			if(sighFlag.equals("Y")){
-				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
 				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 				pfaction.processAction("SIGN", "4H", null, result[0], null, null);
-				successMessage = successMessage+"²¢Ç©×Ö";
+				successMessage = successMessage+"å¹¶ç­¾å­—";
 			}
-			successMessage = successMessage+"³É¹¦£¡";
+			successMessage = successMessage+"æˆåŠŸï¼";
 			ret.put("ResultBillcode", Bovo.getParentVO().getAttributeValue("vbillcode").toString());
 			ret.put("ReturnMessage", successMessage);
 			ret.put("Status","1");
@@ -3737,59 +3760,59 @@ public class RestForWMSimpl {
 			if(result!=null&&result.length>0){
 				String pk = result[0].getHead().getCgeneralhid();
 				BorrowOutVO errorVo = IQ.querySingleBillByPk(BorrowOutVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "4H", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
 		}
 		return RestUtils.toJSONString(ret);
- 	}
- 	
- 	public JSONString Generate49(JSONObject jsonAy) {
+	}
+
+	public JSONString Generate49(JSONObject jsonAy) {
 		returnvo returnJson = new returnvo();
 		BorrowInVO[] result = null;
-		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
+		NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
 		InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 		Map ret = new HashMap();
 		try {
 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 			BorrowInVO Bivo = new BorrowInVO();
 			BorrowInHeadVO hvo = new BorrowInHeadVO();
-			String cwarehouseid = jsonAy.getString("cwarehouseid");  //Èë¿â²Ö¿âid
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //å…¥åº“ä»“åº“id
 
-			String vnote = jsonAy.getString("vnote");  //±íÍ·±¸×¢
-			String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
+			String vnote = jsonAy.getString("vnote");  //è¡¨å¤´å¤‡æ³¨
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
 			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
 			String sql_org = "select s.pk_org from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
-		    String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
+			String sql_group = "select s.pk_group from bd_stordoc s where s.pk_stordoc='"+cwarehouseid+"'";
 			String pk_org = (String)dao.executeQuery(sql_org, new ColumnProcessor());
 			String pk_group = (String)dao.executeQuery(sql_group, new ColumnProcessor());
 			String sql_org_v = "select o.pk_vid from org_orgs o where o.pk_org='"+pk_org+"'";
 			String pk_org_v = (String)dao.executeQuery(sql_org_v, new ColumnProcessor());
-			
-			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
+
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
 			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
 			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
 			if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
 			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
 			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
 			if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+
 			JSONArray list = jsonAy.getJSONArray("list");
 			BorrowInBodyVO[] bvos = new BorrowInBodyVO[list.size()];
-			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿£¬ÓÃ»§ÎªWMS
+			InvocationInfoProxy.getInstance().setGroupId(pk_group);  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡ï¼Œç”¨æˆ·ä¸ºWMS
 			String successMessage = "";
-			
+
 			hvo.setCorpoid(pk_org);
 			hvo.setCorpvid(pk_org_v);
 			hvo.setCtrantypeid("0001A110000000002DY3");
@@ -3803,14 +3826,14 @@ public class RestForWMSimpl {
 			hvo.setVtrantypecode("49-01");
 			hvo.setVnote(vnote);
 			hvo.setStatus(VOStatus.NEW);
-			
+
 			for(int i=0;i<list.size();i++){
-				String crowno = list.getJSONObject(i).getString("crowno");  //ĞĞºÅ
-				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ÎïÁÏid
-//				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
-				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //Ö÷ÊıÁ¿
-				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//¸¨ÊıÁ¿		
-				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //Åú´ÎºÅ
+				String crowno = list.getJSONObject(i).getString("crowno");  //è¡Œå·
+				String cmaterialoid = list.getJSONObject(i).getString("cmaterialoid");  //ç‰©æ–™id
+//				String clocationCode = list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
+				UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nnum"));   //ä¸»æ•°é‡
+				UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));	//è¾…æ•°é‡
+				String vbatchcode = list.getJSONObject(i).getString("vbatchcode");  //æ‰¹æ¬¡å·
 				String cstateid = list.getJSONObject(i).getString("cstateid");
 				String sql_astunit = "select mc.pk_measdoc,m.pk_measdoc zdw,v.pk_source,mc.measrate from bd_material m left join bd_materialconvert mc on m.pk_material=mc.pk_material and mc.isstockmeasdoc='Y' and mc.dr=0 "
 						+ "left join bd_material_v v on m.pk_material=v.pk_material where m.pk_material='"+cmaterialoid+"'";
@@ -3825,9 +3848,9 @@ public class RestForWMSimpl {
 					zdw=materialMap.get("zdw").toString();
 					measrate=materialMap.get("measrate")==null?"1.000000/1.000000":materialMap.get("measrate").toString();
 				}else
-					throw new Exception("ÎïÁÏÖ÷¼ü"+cmaterialoid+"ÔÚNCÏµÍ³ÖĞ²»´æÔÚ£¡");
-				
-				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//²éÑ¯ÎïÁÏµ¥Î»ÖØÁ¿
+					throw new Exception("ç‰©æ–™ä¸»é”®"+cmaterialoid+"åœ¨NCç³»ç»Ÿä¸­ä¸å­˜åœ¨ï¼");
+
+				HashMap<String,Object> matinfo = queryMaterialBD(cmaterialoid);//æŸ¥è¯¢ç‰©æ–™å•ä½é‡é‡
 				UFDouble unitweight = matinfo.get("unitweight")==null?UFDouble.ZERO_DBL:new UFDouble(String.valueOf(matinfo.get("unitweight")));
 				bvos[i] = new BorrowInBodyVO();
 				bvos[i].setBbarcodeclose(UFBoolean.FALSE);
@@ -3863,16 +3886,16 @@ public class RestForWMSimpl {
 			Bivo.setParentVO(hvo);
 			Bivo.setChildrenVO(bvos);
 			result=(BorrowInVO[])pfaction.processAction("WRITE", "49", null, Bivo,null, null);
-			successMessage = "NC½èÈëµ¥±£´æ";
+			successMessage = "NCå€Ÿå…¥å•ä¿å­˜";
 			if(sighFlag.equals("Y")){
-				String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-				UFDateTime taudittime_t = new UFDateTime(taudittime);			
+				String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+				UFDateTime taudittime_t = new UFDateTime(taudittime);
 				InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-				InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
+				InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
 				pfaction.processAction("SIGN", "49", null, result[0], null, null);
-				successMessage = successMessage+"²¢Ç©×Ö";
+				successMessage = successMessage+"å¹¶ç­¾å­—";
 			}
-			successMessage = successMessage+"³É¹¦£¡";
+			successMessage = successMessage+"æˆåŠŸï¼";
 			ret.put("ResultBillcode", Bivo.getParentVO().getAttributeValue("vbillcode").toString());
 			ret.put("ReturnMessage", successMessage);
 			ret.put("Status","1");
@@ -3896,256 +3919,256 @@ public class RestForWMSimpl {
 			if(result!=null&&result.length>0){
 				String pk = result[0].getHead().getCgeneralhid();
 				BorrowInVO errorVo = IQ.querySingleBillByPk(BorrowInVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "49", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
 		}
 		return RestUtils.toJSONString(ret);
- 	}
- 	
- 	public JSONString Generate4B(JSONObject jsonAy) {
- 		returnvo returnJson = new returnvo();
- 		ReturnInVO[] result = null;
- 		String billcode = "";
- 		try {
- 			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
- 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-			 String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-			 String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-			 if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			 String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-			 String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-			 String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-			 if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			 String vnote = jsonAy.getString("vnote");  //±¸×¢
-			 String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			 String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			 String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-			 UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			 UFDate dmakedate_d = dmakedate_t.getDate();	
-			 InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			 JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-			 InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			 InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-			 String successMessage = "";
- 			
- 			String cgeneralhid = jsonAy.getString("cgeneralhid");  //½è³öµ¥±íÍ·ID
- 			BorrowOutVO bo_data = IQ.querySingleBillByPk(BorrowOutVO.class, cgeneralhid);
- 			if (bo_data==null){
- 				throw new Exception("´«ÊäµÄ½è³öµ¥IDÔÚÏµÍ³²»´æÔÚ»òÕßÒÑÉ¾³ı!");
- 			}
- 			BorrowOutVO[] bo_data2 = {bo_data};
- 			ReturnInVO[] PV = (ReturnInVO[])PfUtilTools.runChangeDataAry("4H","4B", bo_data2);
- 			for (int c=0;c<PV.length;c++){
- 				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
- 				PV[c].getParentVO().setVnote(vnote);
- 				PV[c].getParentVO().setCtrantypeid("0001A110000000002DY4");
+	}
+
+	public JSONString Generate4B(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		ReturnInVO[] result = null;
+		String billcode = "";
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+			String successMessage = "";
+
+			String cgeneralhid = jsonAy.getString("cgeneralhid");  //å€Ÿå‡ºå•è¡¨å¤´ID
+			BorrowOutVO bo_data = IQ.querySingleBillByPk(BorrowOutVO.class, cgeneralhid);
+			if (bo_data==null){
+				throw new Exception("ä¼ è¾“çš„å€Ÿå‡ºå•IDåœ¨ç³»ç»Ÿä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
+			}
+			BorrowOutVO[] bo_data2 = {bo_data};
+			ReturnInVO[] PV = (ReturnInVO[])PfUtilTools.runChangeDataAry("4H","4B", bo_data2);
+			for (int c=0;c<PV.length;c++){
+				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
+				PV[c].getParentVO().setVnote(vnote);
+				PV[c].getParentVO().setCtrantypeid("0001A110000000002DY4");
 				PV[c].getParentVO().setVtrantypecode("4B-01");
 				PV[c].getParentVO().setStatus(VOStatus.NEW);
 				ReturnInBodyVO[] bodys = (ReturnInBodyVO[])PV[c].getBodys();
-// 				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //ÖØĞÂ×é½¨±íÌåVO
+// 				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //é‡æ–°ç»„å»ºè¡¨ä½“VO
 				ArrayList<ReturnInBodyVO> bodylist = new ArrayList<ReturnInBodyVO>();
- 				for (int i=0;i<list.size();i++){
- 					String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");
- 					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
- 					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
- 					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode"); 
-					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
+				for (int i=0;i<list.size();i++){
+					String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");
+					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
+					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
+					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
+					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
 					String Locationid = GetLocationid(cwarehouseid,clocationCode);
-					String cstateid = list.getJSONObject(i).getString("cstateid");  //¿â´æ×´Ì¬ID
- 					
- 					for (int j=0;j<bodys.length;j++){
- 						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
- 						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //Ô´Í·µ¥¾İ±íÌåID
- 						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İ±íÍ·ID
- 						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İºÅ
- 						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
- 						if(cgeneralbid.equals(sourcebillbid)){
- 							ReturnInBodyVO newbody = (ReturnInBodyVO)bodys[j].clone();
- 							newbody.setCrowno(String.valueOf(i)+"0");
- 							newbody.setNshouldnum(nnum);
- 							newbody.setNnum(nnum);
- 							newbody.setNshouldassistnum(nastnum);
- 							newbody.setNassistnum(nastnum);
- 							newbody.setVbatchcode(vbatchcode);
- 							newbody.setPk_batchcode(queryPK_batchcode(vbatchcode,newbody.getCmaterialoid()));
- 							newbody.setDbizdate(dmakedate_d);
- 							newbody.setDproducedate(dmakedate_d);
- 							newbody.setDvalidate(getDvalidate(bodys[j].getCmaterialoid(),PV[c].getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));	
- 							newbody.setClocationid(Locationid);
- 							newbody.setCstateid(cstateid);
- 							newbody.setStatus(VOStatus.NEW);
- 							bodylist.add(newbody);
- 							break;
- 						}
- 					}
- 				}
- 				if(bodylist==null||bodylist.size()==0){
- 					throw new Exception("´«ÊäµÄ½è³öµ¥±íÌå¼ÇÂ¼ÔÚNC¶¼²»´æÔÚ£¬Çë¼ì²é£¡");
- 				}
- 				PV[c].setChildrenVO(bodylist.toArray(new ReturnInBodyVO[bodylist.size()]));
- 				result = (ReturnInVO[])pfaction.processAction("WRITE", "4B", null, PV[c], null, null);
- 				billcode = result[0].getParentVO().getVbillcode();
- 				successMessage = "½è³ö»¹»Øµ¥±£´æ";
- 				if(sighFlag.equals("Y")){
-					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					pfaction.processAction("SIGN", "4B", null, result[0], null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
+					String cstateid = list.getJSONObject(i).getString("cstateid");  //åº“å­˜çŠ¶æ€ID
+
+					for (int j=0;j<bodys.length;j++){
+						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
+						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //æºå¤´å•æ®è¡¨ä½“ID
+						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®è¡¨å¤´ID
+						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®å·
+						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
+						if(cgeneralbid.equals(sourcebillbid)){
+							ReturnInBodyVO newbody = (ReturnInBodyVO)bodys[j].clone();
+							newbody.setCrowno(String.valueOf(i)+"0");
+							newbody.setNshouldnum(nnum);
+							newbody.setNnum(nnum);
+							newbody.setNshouldassistnum(nastnum);
+							newbody.setNassistnum(nastnum);
+							newbody.setVbatchcode(vbatchcode);
+							newbody.setPk_batchcode(queryPK_batchcode(vbatchcode,newbody.getCmaterialoid()));
+							newbody.setDbizdate(dmakedate_d);
+							newbody.setDproducedate(dmakedate_d);
+							newbody.setDvalidate(getDvalidate(bodys[j].getCmaterialoid(),PV[c].getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));
+							newbody.setClocationid(Locationid);
+							newbody.setCstateid(cstateid);
+							newbody.setStatus(VOStatus.NEW);
+							bodylist.add(newbody);
+							break;
+						}
+					}
 				}
- 			}
- 			
- 			returnJson.setResultBillcode(billcode);
- 			returnJson.setReturnMessage(successMessage+"³É¹¦£¡");
- 			returnJson.setStatus("1");
- 		} catch (Exception e) {
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 			if(result!=null&&result.length>0){
+				if(bodylist==null||bodylist.size()==0){
+					throw new Exception("ä¼ è¾“çš„å€Ÿå‡ºå•è¡¨ä½“è®°å½•åœ¨NCéƒ½ä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+				}
+				PV[c].setChildrenVO(bodylist.toArray(new ReturnInBodyVO[bodylist.size()]));
+				result = (ReturnInVO[])pfaction.processAction("WRITE", "4B", null, PV[c], null, null);
+				billcode = result[0].getParentVO().getVbillcode();
+				successMessage = "å€Ÿå‡ºè¿˜å›å•ä¿å­˜";
+				if(sighFlag.equals("Y")){
+					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
+					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+					pfaction.processAction("SIGN", "4B", null, result[0], null, null);
+					successMessage = successMessage+"å¹¶ç­¾å­—";
+				}
+			}
+
+			returnJson.setResultBillcode(billcode);
+			returnJson.setReturnMessage(successMessage+"æˆåŠŸï¼");
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(result!=null&&result.length>0){
 				String pk = result[0].getHead().getCgeneralhid();
 				ReturnInVO errorVo = IQ.querySingleBillByPk(ReturnInVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "4B", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
- 		}
- 		return RestUtils.toJSONString(returnJson);
- 	}
- 	
- 	public JSONString Generate4J(JSONObject jsonAy) {
- 		returnvo returnJson = new returnvo();
- 		ReturnOutVO[] result = null;
- 		String billcode = "";
- 		try {
- 			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes()); 
- 			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
- 			String userID = jsonAy.getString("userID");  //ÓÃ»§ID
-			 String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
-			 String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
-			 if(cuserid==null)
-				throw new Exception("ÖÆµ¥ÈË"+userID+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			 String approver = jsonAy.getString("approverID");  //ÉóÅúÈË±àÂë
-			 String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
-			 String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
-			 if(approverid==null)
-				throw new Exception("ÉóÅúÈË"+approver+"ÔÚNC²»´æÔÚ£¬Çë¼ì²é£¡");
-			 String vnote = jsonAy.getString("vnote");  //±¸×¢
-			 String sighFlag = jsonAy.getString("sighFlag");  //ÊÇ·ñÇ©×Ö±êÊ¶
-			 String dmakedate = jsonAy.getString("dmakedate");  //ÖÆµ¥ÈÕÆÚ
-			 String cwarehouseid = jsonAy.getString("cwarehouseid");  //²Ö¿âID
-			 UFDateTime dmakedate_t = new UFDateTime(dmakedate);		
-			 UFDate dmakedate_d = dmakedate_t.getDate();	
-			 InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
-			 JSONArray list = jsonAy.getJSONArray("list");  //»ñÈ¡±íÌå¼ÇÂ¼
-			 InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //ÉèÖÃ¼¯ÍÅ»·¾³±äÁ¿
-			 InvocationInfoProxy.getInstance().setUserId(cuserid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-			 String successMessage = "";
- 			
- 			String cgeneralhid = jsonAy.getString("cgeneralhid");  //½è³öµ¥±íÍ·ID
- 			BorrowInVO bo_data = IQ.querySingleBillByPk(BorrowInVO.class, cgeneralhid);
- 			if (bo_data==null){
- 				throw new Exception("´«ÊäµÄ½èÈëµ¥IDÔÚÏµÍ³²»´æÔÚ»òÕßÒÑÉ¾³ı!");
- 			}
- 			BorrowInVO[] bo_data2 = {bo_data};
- 			ReturnOutVO[] PV = (ReturnOutVO[])PfUtilTools.runChangeDataAry("49","4J", bo_data2);
- 			for (int c=0;c<PV.length;c++){
- 				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
- 				PV[c].getParentVO().setVnote(vnote);
- 				PV[c].getParentVO().setCtrantypeid("0001A110000000002DYR");
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
+	public JSONString Generate4J(JSONObject jsonAy) {
+		returnvo returnJson = new returnvo();
+		ReturnOutVO[] result = null;
+		String billcode = "";
+		try {
+			NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(),"pfxx".getBytes());
+			InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+			String userID = jsonAy.getString("userID");  //ç”¨æˆ·ID
+			String sql_userid = "select u.cuserid from sm_user u where u.pk_psndoc='"+userID+"'";
+			String cuserid = (String) dao.executeQuery(sql_userid, new ColumnProcessor());
+			if(cuserid==null)
+				throw new Exception("åˆ¶å•äºº"+userID+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String approver = jsonAy.getString("approverID");  //å®¡æ‰¹äººç¼–ç 
+			String sql_approver = "select u.cuserid from sm_user u where u.pk_psndoc='"+approver+"'";
+			String approverid = (String) dao.executeQuery(sql_approver, new ColumnProcessor());
+			if(approverid==null)
+				throw new Exception("å®¡æ‰¹äºº"+approver+"åœ¨NCä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+			String vnote = jsonAy.getString("vnote");  //å¤‡æ³¨
+			String sighFlag = jsonAy.getString("sighFlag");  //æ˜¯å¦ç­¾å­—æ ‡è¯†
+			String dmakedate = jsonAy.getString("dmakedate");  //åˆ¶å•æ—¥æœŸ
+			String cwarehouseid = jsonAy.getString("cwarehouseid");  //ä»“åº“ID
+			UFDateTime dmakedate_t = new UFDateTime(dmakedate);
+			UFDate dmakedate_d = dmakedate_t.getDate();
+			InvocationInfoProxy.getInstance().setBizDateTime(dmakedate_t.getMillis());
+			JSONArray list = jsonAy.getJSONArray("list");  //è·å–è¡¨ä½“è®°å½•
+			InvocationInfoProxy.getInstance().setGroupId("0001A1100000000016JO");  //è®¾ç½®é›†å›¢ç¯å¢ƒå˜é‡
+			InvocationInfoProxy.getInstance().setUserId(cuserid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+			String successMessage = "";
+
+			String cgeneralhid = jsonAy.getString("cgeneralhid");  //å€Ÿå‡ºå•è¡¨å¤´ID
+			BorrowInVO bo_data = IQ.querySingleBillByPk(BorrowInVO.class, cgeneralhid);
+			if (bo_data==null){
+				throw new Exception("ä¼ è¾“çš„å€Ÿå…¥å•IDåœ¨ç³»ç»Ÿä¸å­˜åœ¨æˆ–è€…å·²åˆ é™¤!");
+			}
+			BorrowInVO[] bo_data2 = {bo_data};
+			ReturnOutVO[] PV = (ReturnOutVO[])PfUtilTools.runChangeDataAry("49","4J", bo_data2);
+			for (int c=0;c<PV.length;c++){
+				PV[c].getParentVO().setCwarehouseid(cwarehouseid);
+				PV[c].getParentVO().setVnote(vnote);
+				PV[c].getParentVO().setCtrantypeid("0001A110000000002DYR");
 				PV[c].getParentVO().setVtrantypecode("4J-01");
 				PV[c].getParentVO().setStatus(VOStatus.NEW);
 				ReturnOutBodyVO[] bodys = (ReturnOutBodyVO[])PV[c].getBodys();
-// 				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //ÖØĞÂ×é½¨±íÌåVO
+// 				PurchaseInBodyVO[] newbodys = new PurchaseInBodyVO[bodys.length];  //é‡æ–°ç»„å»ºè¡¨ä½“VO
 				ArrayList<ReturnOutBodyVO> bodylist = new ArrayList<ReturnOutBodyVO>();
- 				for (int i=0;i<list.size();i++){
- 					String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");
- 					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
- 					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
- 					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode"); 
-					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //»õÎ»±àÂë
+				for (int i=0;i<list.size();i++){
+					String cgeneralbid = list.getJSONObject(i).getString("cgeneralbid")==null?"null":list.getJSONObject(i).getString("cgeneralbid");
+					UFDouble nnum = list.getJSONObject(i).getString("nnum")==null?UFDouble.ZERO_DBL:new UFDouble(list.getJSONObject(i).getString("nnum"));
+					UFDouble nastnum = list.getJSONObject(i).getString("nastnum")==null?null:new UFDouble(list.getJSONObject(i).getString("nastnum"));
+					String vbatchcode = list.getJSONObject(i).getString("vbatchcode")==null?"":list.getJSONObject(i).getString("vbatchcode");
+					String clocationCode = list.getJSONObject(i).getString("clocationCode")==null?"":list.getJSONObject(i).getString("clocationCode");  //è´§ä½ç¼–ç 
 					String Locationid = GetLocationid(cwarehouseid,clocationCode);
-					String cstateid = list.getJSONObject(i).getString("cstateid");  //¿â´æ×´Ì¬ID
- 					
- 					for (int j=0;j<bodys.length;j++){
- 						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
- 						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //Ô´Í·µ¥¾İ±íÌåID
- 						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İ±íÍ·ID
- 						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //ÖØĞÂ²éÑ¯»ñÈ¡Ô´Í·µ¥¾İºÅ
- 						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
- 						if(cgeneralbid.equals(sourcebillbid)){
- 							ReturnOutBodyVO newbody = (ReturnOutBodyVO)bodys[j].clone();
- 							newbody.setCrowno(String.valueOf(i)+"0");
- 							newbody.setNshouldnum(nnum);
- 							newbody.setNnum(nnum);
- 							newbody.setNshouldassistnum(nastnum);
- 							newbody.setNassistnum(nastnum);
- 							newbody.setVbatchcode(vbatchcode);
- 							newbody.setPk_batchcode(queryPK_batchcode(vbatchcode,newbody.getCmaterialoid()));
- 							newbody.setDbizdate(dmakedate_d);
- 							newbody.setDproducedate(dmakedate_d);
- 							newbody.setDvalidate(getDvalidate(bodys[j].getCmaterialoid(),PV[c].getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));	
- 							newbody.setClocationid(Locationid);
- 							newbody.setCstateid(cstateid);
- 							newbody.setStatus(VOStatus.NEW);
- 							bodylist.add(newbody);
- 							break;
- 						}
- 					}
- 				}
- 				if(bodylist==null||bodylist.size()==0){
- 					throw new Exception("´«ÊäµÄ½èÈëµ¥±íÌå¼ÇÂ¼ÔÚNC¶¼²»´æÔÚ£¬Çë¼ì²é£¡");
- 				}
- 				PV[c].setChildrenVO(bodylist.toArray(new ReturnOutBodyVO[bodylist.size()]));
- 				result = (ReturnOutVO[])pfaction.processAction("WRITE", "4J", null, PV[c], null, null);
- 				billcode = result[0].getParentVO().getVbillcode();
- 				successMessage = "½èÈë»¹»Øµ¥±£´æ";
- 				if(sighFlag.equals("Y")){
-					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
-					String taudittime = jsonAy.getString("taudittime");  //Ç©×ÖÈÕÆÚ
-					UFDateTime taudittime_t = new UFDateTime(taudittime);			
-					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
-					InvocationInfoProxy.getInstance().setUserId(approverid);    //ÉèÖÃÓÃ»§»·¾³±äÁ¿
-					pfaction.processAction("SIGN", "4J", null, result[0], null, null);
-					successMessage = successMessage+"²¢Ç©×Ö";
+					String cstateid = list.getJSONObject(i).getString("cstateid");  //åº“å­˜çŠ¶æ€ID
+
+					for (int j=0;j<bodys.length;j++){
+						String sourcebillbid = bodys[j].getCsourcebillbid()==null?"null":bodys[j].getCsourcebillbid();
+						String cfirstbillbid = bodys[j].getCfirstbillbid()==null?"null":bodys[j].getCfirstbillbid();  //æºå¤´å•æ®è¡¨ä½“ID
+						String cfirstbillhid = InfoQuery(cfirstbillbid,"cfirstbillhid");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®è¡¨å¤´ID
+						String cgddh = InfoQuery(cfirstbillbid,"cgddh");  //é‡æ–°æŸ¥è¯¢è·å–æºå¤´å•æ®å·
+						String notebody = bodys[j].getVnotebody()==null?"null":bodys[j].getVnotebody();
+						if(cgeneralbid.equals(sourcebillbid)){
+							ReturnOutBodyVO newbody = (ReturnOutBodyVO)bodys[j].clone();
+							newbody.setCrowno(String.valueOf(i)+"0");
+							newbody.setNshouldnum(nnum);
+							newbody.setNnum(nnum);
+							newbody.setNshouldassistnum(nastnum);
+							newbody.setNassistnum(nastnum);
+							newbody.setVbatchcode(vbatchcode);
+							newbody.setPk_batchcode(queryPK_batchcode(vbatchcode,newbody.getCmaterialoid()));
+							newbody.setDbizdate(dmakedate_d);
+							newbody.setDproducedate(dmakedate_d);
+							newbody.setDvalidate(getDvalidate(bodys[j].getCmaterialoid(),PV[c].getParentVO().getPk_org(),new UFDate(System.currentTimeMillis())));
+							newbody.setClocationid(Locationid);
+							newbody.setCstateid(cstateid);
+							newbody.setStatus(VOStatus.NEW);
+							bodylist.add(newbody);
+							break;
+						}
+					}
 				}
- 			}
- 			
- 			returnJson.setResultBillcode(billcode);
- 			returnJson.setReturnMessage(successMessage+"³É¹¦£¡");
- 			returnJson.setStatus("1");
- 		} catch (Exception e) {
- 			returnJson.setResultBillcode("");
- 			returnJson.setStatus("0");
- 			returnJson.setReturnMessage(e.toString());
- 			if(result!=null&&result.length>0){
+				if(bodylist==null||bodylist.size()==0){
+					throw new Exception("ä¼ è¾“çš„å€Ÿå…¥å•è¡¨ä½“è®°å½•åœ¨NCéƒ½ä¸å­˜åœ¨ï¼Œè¯·æ£€æŸ¥ï¼");
+				}
+				PV[c].setChildrenVO(bodylist.toArray(new ReturnOutBodyVO[bodylist.size()]));
+				result = (ReturnOutVO[])pfaction.processAction("WRITE", "4J", null, PV[c], null, null);
+				billcode = result[0].getParentVO().getVbillcode();
+				successMessage = "å€Ÿå…¥è¿˜å›å•ä¿å­˜";
+				if(sighFlag.equals("Y")){
+					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
+					String taudittime = jsonAy.getString("taudittime");  //ç­¾å­—æ—¥æœŸ
+					UFDateTime taudittime_t = new UFDateTime(taudittime);
+					InvocationInfoProxy.getInstance().setBizDateTime(taudittime_t.getMillis());
+					InvocationInfoProxy.getInstance().setUserId(approverid);    //è®¾ç½®ç”¨æˆ·ç¯å¢ƒå˜é‡
+					pfaction.processAction("SIGN", "4J", null, result[0], null, null);
+					successMessage = successMessage+"å¹¶ç­¾å­—";
+				}
+			}
+
+			returnJson.setResultBillcode(billcode);
+			returnJson.setReturnMessage(successMessage+"æˆåŠŸï¼");
+			returnJson.setStatus("1");
+		} catch (Exception e) {
+			returnJson.setResultBillcode("");
+			returnJson.setStatus("0");
+			returnJson.setReturnMessage(e.toString());
+			if(result!=null&&result.length>0){
 				String pk = result[0].getHead().getCgeneralhid();
 				ReturnOutVO errorVo = IQ.querySingleBillByPk(ReturnOutVO.class, pk);
-				try {  //»Ø¹öÉú³ÉµÄµ¥¾İ
+				try {  //å›æ»šç”Ÿæˆçš„å•æ®
 //					InvocationInfoProxy.getInstance().setUserDataSource(getValue("datasource"));
 					pfaction.processAction("DELETE", "4J", null, errorVo, null, null);
 				} catch (BusinessException e1) {
-					// TODO ×Ô¶¯Éú³ÉµÄ catch ¿é
+					// TODO è‡ªåŠ¨ç”Ÿæˆçš„ catch å—
 					e1.printStackTrace();
 				}
 			}
- 		}
- 		return RestUtils.toJSONString(returnJson);
- 	}
- 	
+		}
+		return RestUtils.toJSONString(returnJson);
+	}
+
 }
